@@ -1,6 +1,7 @@
 {
   "name": "portal-induccion",
   "version": "1.0.0",
+  "homepage": ".",
   "private": true,
   "dependencies": {
     "lucide-react": "^0.263.1",
