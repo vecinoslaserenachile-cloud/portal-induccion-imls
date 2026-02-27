@@ -1,0 +1,29 @@
+name: Publicar App
+on:
+  push:
+    branches: ["main"]
+permissions:
+  contents: write
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v3
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Instalar ingredientes
+        run: npm install
+
+      - name: Cocinar App (Build)
+        run: npm run build
+
+      - name: Servir en GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build
+          branch: gh-pages
