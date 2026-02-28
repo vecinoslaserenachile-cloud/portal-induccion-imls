@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Play, CheckCircle, ChevronRight, Radio, Music, Award, 
-  ChevronDown, Shield, Heart, DollarSign, FileText, 
-  Users, Map, Printer, RefreshCw, XCircle, Phone, User, Briefcase
+  CheckCircle, ChevronRight, Radio, Music, Award, 
+  ChevronDown, Shield, Heart, DollarSign, 
+  Printer, RefreshCw, XCircle, Phone, User, Briefcase, MapPin
 } from 'lucide-react';
 
 // --- DATOS DEL QUIZ ---
@@ -19,7 +19,7 @@ const QUESTIONS = [
   { q: "¿Cuál es el canal de denuncia oficial?", options: ["Redes Sociales", "Plataforma de Denuncias Confidencial", "Comentario de pasillo"], ans: 1 },
 ];
 
-// --- LISTA DE CONCEJALES (Nombres reales) ---
+// --- LISTA DE CONCEJALES ---
 const CONCEJALES = [
   "Cristian Marín Pastén", "Rayen Pojomovsky Aliste", "Alejandro Astudillo Olguín",
   "Gladys Marín Ossandón", "Francisca Barahona Araya", "María Teresita Prouvay",
@@ -54,28 +54,32 @@ export default function App() {
   const [showFeedback, setShowFeedback] = useState<null | boolean>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const totalSteps = 10; // 0=Login, 1-8=Contenido, 9=Quiz, 10=Certificado
+  const totalSteps = 10; 
 
-  // Lógica de Scroll Obligatorio
+  // --- LÓGICA DE SCROLL MEJORADA (ANTI-BLOQUEO) ---
   const checkProgress = () => {
     const el = scrollRef.current;
     if (el) {
-      // Margen de tolerancia de 50px
-      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
-      if (isAtBottom) setCanAdvance(true);
+      // Calculamos cuánto falta para llegar al fondo
+      const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+      // Si falta menos de 100px (muy generoso) o si el contenido es corto, activamos.
+      if (remaining < 150) setCanAdvance(true);
     }
   };
 
   useEffect(() => {
     // Pasos exentos de scroll: Login(0), Video(1), Quiz(9), Certificado(10)
-    if ([0, 1, 9, 10].includes(step)) setCanAdvance(true);
-    else {
-      setCanAdvance(false); // Bloqueo por defecto
+    if ([0, 1, 9, 10].includes(step)) {
+      setCanAdvance(true);
+    } else {
+      setCanAdvance(false);
+      // Intentamos desbloquear automáticamente si el texto es corto
+      setTimeout(checkProgress, 500);
     }
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [step]);
+  // --------------------------------------------------
 
-  // Manejo del Quiz
   const handleQuizAnswer = (optionIndex: number) => {
     const isCorrect = optionIndex === QUESTIONS[quizIndex].ans;
     setShowFeedback(isCorrect);
@@ -97,17 +101,14 @@ export default function App() {
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="h-screen w-full flex flex-col lg:flex-row bg-white text-slate-900 overflow-hidden pb-16 print:hidden">
       
-      {/* Barra de Progreso Superior */}
       <div className="fixed top-0 w-full h-2 bg-slate-200 z-50">
         <div className="h-full bg-red-600 transition-all duration-1000 ease-out" style={{ width: `${(step / totalSteps) * 100}%` }}></div>
       </div>
       
-      {/* Columna Izquierda (Texto + Scroll) */}
       <div className="w-full lg:w-1/2 flex flex-col h-full pt-12 relative z-10 bg-white shadow-2xl">
         <div className="px-8 lg:px-12 pt-8 pb-4 shrink-0 bg-white z-20">
           <div className="flex justify-between items-center mb-2">
             <p className="text-red-600 font-black text-xs tracking-widest uppercase">Módulo {step}/{totalSteps}</p>
-            {/* Indicador Circular Permanente */}
             <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
                <div className="w-8 h-8 rounded-full border-4 border-slate-200 flex items-center justify-center text-[10px] text-slate-600 relative">
                  <span className="absolute inset-0 rounded-full border-4 border-red-600 border-t-transparent animate-spin" style={{animationDuration: '3s'}}></span>
@@ -120,16 +121,19 @@ export default function App() {
           <h3 className="text-lg text-slate-500 font-medium italic mt-2 border-l-4 border-red-600 pl-4">{subtitle}</h3>
         </div>
         
-        {/* ÁREA DE LECTURA (Scroll Obligatorio) */}
+        {/* ÁREA DE LECTURA */}
         <div ref={scrollRef} onScroll={checkProgress} className="flex-1 overflow-y-auto px-8 lg:px-12 py-6 space-y-6 text-lg text-slate-600 leading-relaxed text-justify">
           {content}
-          {/* Espaciador para forzar scroll */}
-          <div className="h-24 flex items-center justify-center opacity-20">
-            <ChevronDown className="animate-bounce"/> Sigue bajando
-          </div>
+          {/* El aviso solo aparece si AÚN no puedes avanzar */}
+          {!canAdvance && (
+            <div className="h-32 flex items-center justify-center opacity-40 animate-pulse text-red-500 font-bold">
+              <ChevronDown className="animate-bounce mr-2"/> Sigue bajando para continuar
+            </div>
+          )}
+          {/* Espaciador invisible para garantizar scroll */}
+          <div className="h-10"></div>
         </div>
 
-        {/* Botonera Inferior */}
         <div className="px-8 lg:px-12 py-6 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0 h-24">
            <div className="text-xs font-bold uppercase tracking-widest">
              {canAdvance ? 
@@ -143,7 +147,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Columna Derecha (Visual) */}
       <div className="w-full lg:w-1/2 h-full bg-slate-100 flex items-center justify-center relative overflow-hidden border-l border-slate-200">
         {visual}
       </div>
@@ -154,7 +157,6 @@ export default function App() {
   // --- PASO 0: PORTADA Y REGISTRO ---
   if (step === 0) return (
     <div className="h-screen w-full flex flex-col lg:flex-row bg-slate-900 overflow-hidden relative print:hidden">
-      {/* IMAGEN DE FONDO REAL (Cargar en public/img/portada.jpg) */}
       <div className="absolute inset-0">
         <img src="/img/portada.jpg" onError={(e) => e.currentTarget.src='https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070'} className="w-full h-full object-cover opacity-40" alt="La Serena" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
@@ -173,7 +175,7 @@ export default function App() {
              </div>
              <div className="relative w-1/2">
                 <FileText className="absolute top-4 left-4 text-slate-400" size={18}/>
-                <input className="w-full pl-12 p-4 rounded-xl bg-white/90 font-bold text-slate-900" placeholder="RUT (sin puntos)" onChange={e => setUserData({...userData, rut: e.target.value})} />
+                <input className="w-full pl-12 p-4 rounded-xl bg-white/90 font-bold text-slate-900" placeholder="RUT" onChange={e => setUserData({...userData, rut: e.target.value})} />
              </div>
           </div>
           <div className="flex gap-4">
@@ -187,24 +189,44 @@ export default function App() {
              </div>
           </div>
 
-          <select className="w-full p-4 rounded-xl bg-white/90 font-bold text-slate-900" onChange={e => setUserData({...userData, dept: e.target.value})}>
-            <option value="">Selecciona tu Departamento...</option>
-            <option value="Alcaldía">Alcaldía</option>
-            <option value="Administración Municipal">Administración Municipal</option>
-            <option value="Secretaría Municipal">Secretaría Municipal</option>
-            <option value="DIDECO">DIDECO (Desarrollo Comunitario)</option>
-            <option value="SECPLAN">SECPLAN (Planificación)</option>
-            <option value="DOM">DOM (Obras Municipales)</option>
-            <option value="Dirección de Tránsito">Dirección de Tránsito</option>
-            <option value="Asesoría Jurídica">Asesoría Jurídica</option>
-            <option value="Control Interno">Control Interno</option>
-            <option value="Gestión de Personas">Gestión de Personas</option>
-            <option value="Seguridad Ciudadana">Seguridad Ciudadana</option>
-            <option value="Servicio a la Comunidad">Servicio a la Comunidad</option>
-            <option value="Turismo y Patrimonio">Turismo y Patrimonio</option>
-            <option value="Salud Municipal">Salud Municipal (Corporación)</option>
-            <option value="Educación">Educación (Corporación)</option>
-          </select>
+          <div className="relative">
+            <MapPin className="absolute top-4 left-4 text-slate-400" size={18}/>
+            <select className="w-full pl-12 p-4 rounded-xl bg-white/90 font-bold text-slate-900 appearance-none" onChange={e => setUserData({...userData, dept: e.target.value})}>
+              <option value="">Selecciona tu Dirección / Depto...</option>
+              <optgroup label="Direcciones Estratégicas">
+                <option value="Alcaldía">Alcaldía / Gabinete</option>
+                <option value="Administración Municipal">Administración Municipal</option>
+                <option value="Secretaría Municipal">Secretaría Municipal</option>
+                <option value="Asesoría Jurídica">Asesoría Jurídica</option>
+                <option value="Control Interno">Dirección de Control Interno</option>
+                <option value="SECPLAN">SECPLAN (Planificación)</option>
+                <option value="Comunicaciones">Comunicaciones Estratégicas</option>
+              </optgroup>
+              <optgroup label="Direcciones Operativas">
+                <option value="DIDECO">DIDECO (Desarrollo Comunitario)</option>
+                <option value="DOM">DOM (Obras Municipales)</option>
+                <option value="Tránsito">Dirección de Tránsito</option>
+                <option value="Servicios a la Comunidad">Servicios a la Comunidad (Aseo y Ornato)</option>
+                <option value="Seguridad Ciudadana">Seguridad Ciudadana</option>
+                <option value="Turismo y Patrimonio">Turismo y Patrimonio</option>
+                <option value="Gestión de Personas">Gestión de Personas (RRHH)</option>
+                <option value="DAF">DAF (Admin. y Finanzas)</option>
+                <option value="Protección Civil">Protección Civil y Emergencias</option>
+              </optgroup>
+              <optgroup label="Delegaciones y Otros">
+                <option value="Del. Avenida del Mar">Delegación Avenida del Mar</option>
+                <option value="Del. La Antena">Delegación La Antena</option>
+                <option value="Del. Las Compañías">Delegación Las Compañías</option>
+                <option value="Del. Rural">Delegación Rural</option>
+                <option value="Juzgado Policía Local">Juzgado de Policía Local (1° o 2°)</option>
+                <option value="Cultura">Departamento de Cultura</option>
+              </optgroup>
+              <optgroup label="Corporaciones">
+                <option value="Salud Municipal">Salud Municipal</option>
+                <option value="Educación">Educación</option>
+              </optgroup>
+            </select>
+          </div>
           
           <button disabled={!userData.nombres || !userData.rut || !userData.dept} onClick={() => setStep(1)} className="w-full bg-red-600 text-white p-4 rounded-xl font-bold hover:bg-red-700 transition-all shadow-lg flex justify-between px-6 items-center group">
             COMENZAR INDUCCIÓN <ChevronRight className="group-hover:translate-x-1 transition-transform"/>
@@ -215,7 +237,6 @@ export default function App() {
   );
 
   switch (step) {
-    // 1. BIENVENIDA (Video Autoplay)
     case 1: return <ChapterLayout title="Bienvenida Oficial" subtitle="Mensaje de la Alcaldesa" 
       visual={
         <div className="w-full h-full flex items-center justify-center bg-black">
@@ -234,15 +255,13 @@ export default function App() {
       } 
     />;
     
-    // 2. CONCEJO MUNICIPAL (Fotos + Texto Largo)
     case 2: return <ChapterLayout title="Concejo Municipal" subtitle="Periodo 2024 - 2028" 
       visual={
         <div className="h-full w-full bg-slate-50 overflow-y-auto p-4">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {CONCEJALES.map((name, i) => (
-               <div key={i} className="bg-white p-2 rounded-xl shadow-md flex flex-col items-center text-center">
+               <div key={i} className="bg-white p-2 rounded-xl shadow-md flex flex-col items-center text-center transform hover:scale-105 transition-all">
                  <div className="w-20 h-20 bg-slate-200 rounded-full mb-2 overflow-hidden border-2 border-red-100">
-                   {/* Carga fotos de public/img/concejal_1.jpg etc */}
                    <img src={`/img/concejal_${i+1}.jpg`} onError={(e) => e.currentTarget.style.display='none'} className="w-full h-full object-cover" alt="Foto"/>
                    <User className="w-full h-full p-4 text-slate-400" />
                  </div>
@@ -255,104 +274,90 @@ export default function App() {
       }
       content={
         <>
-          <p>El <strong>Concejo Municipal</strong> es el órgano colegiado encargado de hacer efectiva la participación de la comunidad local. Su función no es solo normativa, dictando ordenanzas clave para la comuna, sino también fiscalizadora, asegurando que los recursos municipales se utilicen con probidad y eficiencia.</p>
-          <p>Está compuesto por la Alcaldesa y <strong>10 concejales</strong>, quienes son elegidos democráticamente por votación popular. Ellos representan las distintas sensibilidades políticas y sociales de La Serena.</p>
-          <p>Es fundamental que conozcas a nuestras autoridades, ya que en tu labor diaria interactuarás con las comisiones que ellos presiden (Salud, Educación, Urbanismo, etc.). Las sesiones de Concejo son públicas y se transmiten para garantizar la transparencia de cara a la ciudadanía.</p>
-          <p>La precedencia de los concejales (el orden en que aparecen) está determinada por su votación histórica en la última elección, siendo el primero de la lista quien subroga protocolarmente a la Alcaldesa en ceremonias públicas.</p>
+          <p>El <strong>Concejo Municipal</strong> es el órgano colegiado encargado de hacer efectiva la participación de la comunidad local. Su función no es solo normativa, dictando ordenanzas clave para la comuna, sino también fiscalizadora.</p>
+          <p>Está compuesto por la Alcaldesa y <strong>10 concejales</strong>, elegidos democráticamente. Ellos representan las distintas sensibilidades políticas y sociales de La Serena.</p>
+          <p>Es fundamental que conozcas a nuestras autoridades. Las sesiones de Concejo son públicas y se transmiten para garantizar la transparencia de cara a la ciudadanía.</p>
+          <p>La precedencia (orden) de los concejales está determinada por su votación histórica, siendo el primero de la lista quien subroga protocolarmente a la Alcaldesa.</p>
         </>
       } 
     />;
 
-    // 3. ORGANIGRAMA SIMPLIFICADO
     case 3: return <ChapterLayout title="Nuestra Estructura" subtitle="Visión General" 
       visual={<div className="flex items-center justify-center h-full bg-slate-50 p-8"><img src="/img/organigrama_simple.png" onError={(e) => e.currentTarget.src='https://placehold.co/600x400/png?text=Organigrama+Simple'} className="max-w-full shadow-2xl rounded-xl" /></div>}
       content={
         <>
-          <p>Para cumplir con nuestra misión de servicio, el municipio se organiza bajo una estructura jerárquica clara y eficiente. Entender esto es crucial para saber dónde encaja tu función dentro del engranaje municipal.</p>
-          <p><strong>Nivel Directivo:</strong> Encabezado por la Alcaldía, Secretaría Municipal y Administración Municipal. Aquí se toman las decisiones estratégicas.</p>
-          <p><strong>Nivel Operativo:</strong> Direcciones como DIDECO (social), DOM (obras) y Tránsito, que ejecutan los programas en terreno.</p>
-          <p><strong>Nivel de Apoyo:</strong> Unidades como Jurídica, Control y Gestión de Personas, que dan soporte transversal a toda la operación.</p>
-          <p>A continuación, profundizaremos en el detalle completo de todas las unidades.</p>
+          <p>El municipio se organiza bajo una estructura jerárquica clara para servir eficientemente a la comunidad.</p>
+          <p><strong>Nivel Directivo:</strong> Encabezado por la Alcaldía, Secretaría Municipal y Administración Municipal. Aquí se define la estrategia.</p>
+          <p><strong>Nivel Operativo:</strong> Direcciones como DIDECO, DOM y Tránsito, que ejecutan los programas en terreno.</p>
+          <p><strong>Nivel de Apoyo:</strong> Unidades como Jurídica, Control y Gestión de Personas, que dan soporte transversal.</p>
         </>
       } 
     />;
 
-    // 4. ORGANIGRAMA DETALLADO (Nuevo)
     case 4: return <ChapterLayout title="Organigrama Detallado" subtitle="Mapa Completo de Áreas" 
       visual={<div className="flex items-center justify-center h-full bg-slate-50 overflow-auto p-4"><img src="/img/organigrama_full.png" onError={(e) => e.currentTarget.src='https://placehold.co/1000x1000/png?text=Carga+tu+img/organigrama_full.png'} className="min-w-[800px] shadow-2xl" /></div>}
       content={
         <>
-          <p>Este es el mapa completo de nuestra institución. Como puedes ver, cada dirección se subdivide en departamentos y oficinas especializadas.</p>
-          <p>Es importante que identifiques tu ubicación exacta en este mapa. ¿De qué Dirección dependes? ¿Quién es tu jefatura directa? La comunicación formal siempre debe respetar los conductos regulares establecidos en este organigrama.</p>
-          <p>Además, observa las unidades de Control y Jurídica. Ellas velan por la legalidad de nuestros actos. Antes de ejecutar cualquier proyecto o compra, es probable que necesites el visado de estas áreas.</p>
-          <p>Tómate un momento para revisar la imagen detallada a la derecha. Entender el flujo de autoridad y responsabilidad te ahorrará muchos problemas administrativos en el futuro.</p>
+          <p>Este es el mapa completo de nuestra institución. Cada dirección se subdivide en departamentos especializados.</p>
+          <p>Es importante que identifiques tu ubicación exacta: ¿De qué Dirección dependes? ¿Quién es tu jefatura directa? La comunicación formal debe respetar siempre los conductos regulares.</p>
+          <p>Observa también las unidades de Control y Jurídica: ellas velan por la legalidad de nuestros actos. Cualquier proceso importante pasará por su revisión.</p>
         </>
       } 
     />;
 
-    // 5. MAPA DE PÚBLICOS
     case 5: return <ChapterLayout title="Mapa de Públicos" subtitle="Nuestro Ecosistema" 
       visual={
         <div className="relative w-full h-full flex items-center justify-center bg-slate-50">
-           {/* Aquí iría tu gráfico interactivo o imagen */}
            <div className="grid grid-cols-2 gap-8 p-12">
-             <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-blue-500"><h4 className="font-bold text-blue-600">CIUDADANÍA</h4><p className="text-sm">Juntas de Vecinos, Clubes de Adulto Mayor, Usuarios individuales.</p></div>
-             <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-red-500"><h4 className="font-bold text-red-600">GOBIERNO</h4><p className="text-sm">SUBDERE, GORE, Ministerios, Contraloría.</p></div>
-             <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-green-500"><h4 className="font-bold text-green-600">PRIVADOS</h4><p className="text-sm">Proveedores, Gremios (Cámara de Comercio), Empresas.</p></div>
-             <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-purple-500"><h4 className="font-bold text-purple-600">INTERNO</h4><p className="text-sm">Asociaciones de Funcionarios, Concejo Municipal, Sindicatos.</p></div>
+             <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-blue-500"><h4 className="font-bold text-blue-600">CIUDADANÍA</h4><p className="text-sm">Juntas de Vecinos, Adulto Mayor, Usuarios.</p></div>
+             <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-red-500"><h4 className="font-bold text-red-600">GOBIERNO</h4><p className="text-sm">SUBDERE, GORE, Contraloría.</p></div>
+             <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-green-500"><h4 className="font-bold text-green-600">PRIVADOS</h4><p className="text-sm">Proveedores, Gremios, Empresas.</p></div>
+             <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-purple-500"><h4 className="font-bold text-purple-600">INTERNO</h4><p className="text-sm">Funcionarios, Concejo, Sindicatos.</p></div>
            </div>
         </div>
       }
       content={
         <>
-          <p>La gestión municipal no ocurre en el vacío. Somos un sistema abierto que interactúa constantemente con múltiples actores. A esto le llamamos nuestro <strong>Mapa de Públicos</strong>.</p>
-          <p><strong>1. El Ciudadano (Centro):</strong> Es nuestro "cliente" principal. Todo lo que hacemos debe buscar mejorar su calidad de vida. Desde el que pide una hora médica hasta el que solicita una patente.</p>
-          <p><strong>2. El Gobierno Central:</strong> De ellos dependemos para gran parte del financiamiento (FNDR, PMU) y debemos rendirles cuentas estrictas.</p>
-          <p><strong>3. Gremios y Sociedad Civil:</strong> Actores claves para la gobernanza. Trabajamos con la Cámara de Comercio, Turismo y ONGs.</p>
-          <p>Comprender quién está al otro lado del mesón o del teléfono es vital para ofrecer una atención empática y efectiva.</p>
+          <p>La gestión municipal es un ecosistema vivo. Interactuamos constantemente con múltiples actores:</p>
+          <p><strong>1. El Ciudadano:</strong> Nuestro foco principal. Todo lo que hacemos debe mejorar su calidad de vida.</p>
+          <p><strong>2. Gobierno Central:</strong> Fuente de financiamiento y normativa.</p>
+          <p><strong>3. Gremios y Sociedad Civil:</strong> Actores claves para la gobernanza local.</p>
         </>
       } 
     />;
 
-    // 6. LEY KARIN
     case 6: return <ChapterLayout title="Ley Karin" subtitle="Espacios Libres de Violencia" visual={<div className="flex items-center justify-center h-full bg-pink-50"><Heart size={200} className="text-pink-500 animate-pulse" /></div>} 
       content={
         <>
-          <p>La entrada en vigencia de la <strong>Ley N° 21.643 (Ley Karin)</strong> marca un antes y un después en las relaciones laborales del sector público. Esta ley modifica el Código del Trabajo para prevenir, investigar y sancionar el acoso laboral, sexual y la violencia en el trabajo.</p>
-          <p><strong>¿Qué cambia?</strong> Ya no se exige que el acoso sea "reiterado" para ser denunciado. Un solo acto grave puede constituir acoso. Además, se incorpora la violencia ejercida por terceros (usuarios, proveedores) hacia los funcionarios.</p>
-          <p>El Municipio ha implementado protocolos estrictos de denuncia confidencial. Si eres víctima o testigo, tienes el deber y el derecho de denunciar. Contamos con apoyo psicológico y jurídico para acompañar el proceso.</p>
-          <p>Recuerda: El buen trato no es solo un valor ético, es ahora una obligación legal. Cuidarnos entre todos es la base de un buen servicio.</p>
+          <p>La <strong>Ley N° 21.643 (Ley Karin)</strong> marca un antes y un después. Previene, investiga y sanciona el acoso laboral, sexual y la violencia en el trabajo.</p>
+          <p><strong>¿Qué cambia?</strong> Ya no se exige "reiteración" para denunciar. Un solo acto grave basta. También sanciona la violencia de terceros (usuarios) hacia funcionarios.</p>
+          <p>El Municipio tiene tolerancia cero y cuenta con protocolos de denuncia confidencial. El buen trato es ahora una obligación legal.</p>
         </>
       } 
     />;
 
-    // 7. REMUNERACIONES (Detalle Planta, Contrata, Honorarios)
     case 7: return <ChapterLayout title="Remuneraciones" subtitle="Tu Vínculo Contractual" visual={<div className="flex items-center justify-center h-full bg-green-50"><DollarSign size={200} className="text-green-600" /></div>} 
       content={
         <>
-          <p>Es fundamental que entiendas tu calidad jurídica, ya que define tus derechos y cómo recibes tu pago. En el municipio conviven tres estamentos principales:</p>
-          <p><strong>1. Planta (Titulares):</strong> Son cargos permanentes creados por ley. Gozan de inamovilidad y carrera funcionaria.</p>
-          <p><strong>2. Contrata:</strong> Son cargos transitorios, que duran hasta el 31 de diciembre de cada año. Se renuevan anualmente según las necesidades del servicio.</p>
-          <p><strong>3. Honorarios:</strong> Prestadores de servicios para cometidos específicos. No son funcionarios públicos propiamente tales, pero tienen derechos protegidos por el Código del Trabajo y dictámenes de Contraloría.</p>
-          <p><strong>Fechas de Pago:</strong> Para Planta y Contrata, el pago se realiza impostergablemente el <strong>penúltimo día hábil del mes</strong>. Para Honorarios, depende de la entrega oportuna del informe de actividades visado por la jefatura.</p>
-          <p>Recuerda revisar siempre tu liquidación en el portal de funcionarios para verificar asignaciones de zona, bonos PMG o descuentos legales.</p>
+          <p>En el municipio conviven tres estamentos principales, cada uno con sus reglas:</p>
+          <p><strong>1. Planta (Titulares):</strong> Cargos permanentes por ley. Tienen carrera funcionaria.</p>
+          <p><strong>2. Contrata:</strong> Cargos transitorios anuales (renovables).</p>
+          <p><strong>3. Honorarios:</strong> Prestadores de servicios específicos. Se rigen por su contrato y el Código Civil/Trabajo según corresponda.</p>
+          <p><strong>Pago:</strong> Planta y Contrata reciben su sueldo el <strong>penúltimo día hábil del mes</strong>. Revisa siempre tu liquidación para ver asignaciones y bonos.</p>
         </>
       } 
     />;
 
-    // 8. SEGURIDAD Y REGLAMENTO
     case 8: return <ChapterLayout title="Seguridad y Normas" subtitle="Derechos y Deberes" visual={<div className="flex items-center justify-center h-full bg-yellow-50"><Shield size={200} className="text-yellow-600" /></div>} 
       content={
         <>
-          <p>Para cerrar los contenidos, revisemos dos pilares de tu día a día: El Reglamento Interno y la Seguridad Laboral.</p>
-          <p><strong>Reglamento Interno:</strong> Es la "Constitución" de nuestra convivencia. Regula el control horario (uso de reloj o huella), el uso de la credencial corporativa, los permisos administrativos (6 días al año) y feriados legales. Su lectura es obligatoria.</p>
-          <p><strong>Seguridad y Autocuidado:</strong> La Serena es una ciudad costera con riesgo de tsunami. Debes conocer las vías de evacuación de tu edificio (Cota 30). Además, ante cualquier accidente ocurrido en el trabajo o en el trayecto directo (casa-trabajo), debes informar de inmediato para activar el seguro de la Ley 16.744 (ACHS).</p>
-          <p>Un funcionario informado y seguro es un funcionario capaz de cuidar a los demás. ¡Estás listo para la evaluación!</p>
+          <p><strong>Reglamento Interno:</strong> Es nuestra "Constitución". Regula el control horario, uso de credencial, permisos (6 días administrativos al año) y obligaciones funcionarias.</p>
+          <p><strong>Seguridad:</strong> Conoce las vías de evacuación (Cota 30 ante tsunamis). Ante cualquier accidente laboral o de trayecto, informa INMEDIATAMENTE para activar el seguro ACHS.</p>
+          <p>Un funcionario informado es un funcionario seguro. ¡Estás listo para la evaluación!</p>
         </>
       } 
     />;
     
-    // 9. QUIZ
     case 9: return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white p-4 print:hidden">
         <div className="max-w-2xl w-full">
@@ -396,13 +401,10 @@ export default function App() {
       </div>
     );
 
-    // 10. CERTIFICADO FINAL (Logos + Datos Completos)
     case 10: return (
       <div className="min-h-screen bg-slate-800 flex items-center justify-center p-4">
-        {/* LIENZO DE IMPRESIÓN */}
         <div className="bg-white p-12 max-w-5xl w-full aspect-[1.4/1] relative shadow-2xl flex flex-col items-center justify-between text-center border-[20px] border-double border-slate-200 print:w-full print:h-screen print:border-none print:shadow-none print:absolute print:top-0 print:left-0 print:m-0">
           
-          {/* Encabezado con Logos */}
           <div className="w-full flex justify-between items-start mb-8">
              <img src="/img/escudo.png" onError={(e) => e.currentTarget.style.display='none'} className="h-24 object-contain" alt="Escudo IMLS"/>
              <img src="/img/innovacion.png" onError={(e) => e.currentTarget.style.display='none'} className="h-24 object-contain" alt="Sello Innovación"/>
@@ -416,14 +418,13 @@ export default function App() {
              <div className="border-b-2 border-slate-900 pb-2 mb-2 w-full max-w-2xl">
                <h2 className="text-4xl font-bold text-slate-900 uppercase">{userData.nombres}</h2>
              </div>
-             <p className="text-sm text-slate-400 font-bold mb-8">RUT: {userData.rut} | Cargo: {userData.cargo}</p>
+             <p className="text-sm text-slate-400 font-bold mb-8">RUT: {userData.rut} | Cargo: {userData.cargo} | Depto: {userData.dept}</p>
              
              <p className="text-lg text-slate-600 mb-2">Por haber completado con distinción el programa de</p>
              <h3 className="text-3xl font-bold text-red-600 uppercase tracking-widest mb-4">Inducción Municipal 2026</h3>
-             <p className="max-w-xl text-slate-500 text-sm">Validando conocimientos en probidad, estructura municipal, Ley Karin, remuneraciones y seguridad laboral, alineándose con los objetivos estratégicos de la comuna de La Serena.</p>
+             <p className="max-w-xl text-slate-500 text-sm">Validando conocimientos en probidad, estructura municipal, Ley Karin, remuneraciones y seguridad laboral.</p>
           </div>
           
-          {/* Firmas */}
           <div className="flex justify-between w-full px-10 mt-12 items-end">
             <div className="text-center">
               <div className="w-40 h-16 mb-2 mx-auto flex items-end justify-center"><img src="/img/firma_personas.png" className="max-h-full opacity-50" onError={(e)=>e.currentTarget.style.display='none'}/></div>
@@ -446,7 +447,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Botonera Flotante */}
         <div className="fixed bottom-8 right-8 flex gap-4 print:hidden z-50">
            <button onClick={() => setStep(0)} className="bg-slate-600 text-white p-4 rounded-full shadow-lg hover:bg-slate-700 transition-all" title="Reiniciar">
              <RefreshCw />
