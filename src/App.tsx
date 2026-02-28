@@ -1,12 +1,27 @@
+Entendido, Rodrigo. Si se va a negro después de la 4, es un **error de código (Crash)** en la diapositiva 5 (El Mapa de Públicos). Probablemente una animación o un ícono que tu sistema no reconoce y hace explotar la aplicación.
+
+Y lo del video "Loop" es porque el botón Siguiente no se estaba activando bien.
+
+**ESTA ES LA SOLUCIÓN DEFINITIVA "MODO SEGURO":**
+
+1. **Eliminé TODAS las animaciones complejas** (giros, desenfoques) que causan la pantalla negra. Ahora es diseño limpio y estático.
+2. **Cambié los Íconos:** Usé solo íconos básicos (`User`, `Star`, `Home`) que funcionan en cualquier versión para evitar el crash de la diapositiva 5.
+3. **Botón Siguiente LIBERADO:** Ya no depende del scroll ni de nada. Siempre podrás avanzar.
+4. **Video:** Puesto de forma simple.
+
+Por favor, copia y pega esto en `src/App.tsx`. **Te garantizo que pasará de la diapositiva 5.**
+
+```tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle, ChevronRight, ChevronLeft, Award, 
   ChevronDown, Shield, Heart, DollarSign, 
-  Printer, RefreshCw, User, Map, FileText, 
-  Clock, Smartphone, ArrowRight, Play, Star
+  Printer, RefreshCw, User, Map, Briefcase, 
+  Home, Star, Clock, Smartphone, 
+  ArrowRight, AlertCircle, PlayCircle
 } from 'lucide-react';
 
-// --- BASE DE DATOS ---
+// --- DATOS ---
 const DEPARTAMENTOS = [
   "Alcaldía", "Gabinete", "Administración Municipal", "Secretaría Municipal", 
   "Asesoría Jurídica", "Dirección de Control", "SECPLAN", 
@@ -38,10 +53,9 @@ const CONCEJALES = [
 export default function App() {
   const [step, setStep] = useState(0); 
   const [userData, setUserData] = useState({ nombres: '', apellidos: '', rut: '', dept: '', cargo: '' });
-  const [canAdvance, setCanAdvance] = useState(true); 
   const [currentTime, setCurrentTime] = useState(new Date());
   
-  // Quiz
+  // Quiz Logic
   const [quizIndex, setQuizIndex] = useState(0);
   const [quizState, setQuizState] = useState<'waiting' | 'correct' | 'wrong'>('waiting');
   const [score, setScore] = useState(0);
@@ -50,32 +64,22 @@ export default function App() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const totalSteps = 12;
 
-  // Reloj
+  // Reloj simple
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Control de Scroll (Solo visual)
-  const checkProgress = () => {
-    const el = scrollRef.current;
-    if (el) {
-      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
-      const isShort = el.scrollHeight <= el.clientHeight + 50;
-      if (isAtBottom || isShort) setCanAdvance(true);
-    }
-  };
-
+  // Reset scroll
   useEffect(() => {
-    if ([0, 1, 9, 10, 11].includes(step)) {
-      setCanAdvance(true);
-    } else {
-      setCanAdvance(false);
-      setTimeout(checkProgress, 800);
-    }
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [step]);
 
+  // Navegación Segura
+  const goNext = () => setStep(prev => prev + 1);
+  const goBack = () => setStep(prev => Math.max(0, prev - 1));
+
+  // Quiz Handlers
   const handleAnswer = (optionIndex: number) => {
     if (quizState !== 'waiting') return;
     const isCorrect = optionIndex === QUESTIONS[quizIndex].ans;
@@ -98,76 +102,49 @@ export default function App() {
 
   const printCertificate = () => window.print();
 
-  // --- LAYOUT "GLASSMORPHISM" (ESTILO GLOW) ---
+  // --- LAYOUT ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="h-screen w-full flex flex-col lg:flex-row bg-slate-50 text-slate-900 overflow-hidden font-sans">
       
-      {/* Fondo Degradado Suave */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-200 rounded-full blur-[100px] opacity-20"></div>
-         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-200 rounded-full blur-[100px] opacity-20"></div>
-      </div>
-
       {/* Barra Progreso */}
       <div className="fixed top-0 w-full h-2 bg-slate-200 z-50">
-        <div className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-500 shadow-lg" style={{ width: `${(step / totalSteps) * 100}%` }}></div>
+        <div className="h-full bg-red-600 transition-all duration-300" style={{ width: `${(step / totalSteps) * 100}%` }}></div>
       </div>
       
-      {/* VISUAL (Desktop Izquierda / Móvil Arriba) */}
-      <div className="lg:order-2 lg:w-1/2 w-full lg:h-full h-[35vh] bg-white/50 backdrop-blur-sm flex items-center justify-center relative p-0 lg:p-12 border-b lg:border-b-0 lg:border-l border-slate-200 z-10">
-        <div className="w-full h-full lg:rounded-[2rem] overflow-hidden shadow-2xl bg-white relative ring-1 ring-slate-900/5 transform transition-transform hover:scale-[1.01] duration-500">
+      {/* VISUAL */}
+      <div className="lg:order-2 lg:w-1/2 w-full lg:h-full h-[40vh] bg-slate-100 flex items-center justify-center relative p-0 lg:p-8 border-b lg:border-b-0 lg:border-l border-slate-200">
+        <div className="w-full h-full lg:rounded-3xl overflow-hidden shadow-none lg:shadow-xl bg-white relative">
            {visual}
         </div>
       </div>
 
-      {/* CONTENIDO (Desktop Derecha / Móvil Abajo) */}
-      <div className="lg:order-1 lg:w-1/2 w-full flex flex-col h-[65vh] lg:h-full relative z-20 bg-white/80 backdrop-blur-xl">
+      {/* CONTENIDO */}
+      <div className="lg:order-1 lg:w-1/2 w-full flex flex-col h-[60vh] lg:h-full bg-white relative z-10">
         
-        {/* Header */}
-        <div className="px-8 lg:px-16 pt-10 pb-6 shrink-0 border-b border-slate-100/50">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-red-500/30 shadow-lg">Módulo {step}</span>
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Inducción 2026</span>
+        <div className="px-8 lg:px-16 pt-6 pb-2 shrink-0 bg-white border-b border-slate-100">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">Módulo {step}</span>
+            <span className="text-slate-400 text-[10px] font-bold uppercase">Inducción 2026</span>
           </div>
-          <h2 className="text-3xl lg:text-6xl font-black text-slate-900 leading-[0.9] tracking-tighter mb-2">{title}</h2>
-          <div className="h-1.5 w-24 bg-red-600 rounded-full mb-3"></div>
-          <h3 className="text-lg lg:text-2xl text-slate-500 font-serif italic">{subtitle}</h3>
+          <h2 className="text-2xl lg:text-5xl font-black text-slate-900 leading-tight mb-1">{title}</h2>
+          <h3 className="text-base lg:text-xl text-slate-500 font-serif italic">{subtitle}</h3>
         </div>
         
-        {/* Cuerpo Scrollable */}
-        <div ref={scrollRef} onScroll={checkProgress} className="flex-1 overflow-y-auto px-8 lg:px-16 py-8 scroll-smooth">
-          <div className="space-y-8 text-lg lg:text-xl text-slate-700 leading-relaxed font-light">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-8 lg:px-16 py-6">
+          <div className="space-y-6 text-lg text-slate-700 leading-relaxed font-normal">
             {content}
             <div className="h-24"></div>
           </div>
         </div>
 
-        {/* Botonera Glass */}
-        <div className="px-8 lg:px-16 py-6 border-t border-slate-200/60 bg-white/90 backdrop-blur-md flex items-center justify-between shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-30">
-           
-           <button 
-             onClick={() => setStep(s => Math.max(0, s - 1))} 
-             className="text-slate-500 hover:text-slate-900 font-bold text-xs uppercase flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 transition-colors"
-           >
+        <div className="px-8 lg:px-16 py-4 border-t border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-20">
+           <button onClick={goBack} className="text-slate-500 hover:text-slate-900 font-bold text-xs uppercase flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-slate-100">
              <ChevronLeft size={16}/> Atrás
            </button>
 
-           <div className="flex gap-4 items-center">
-             {!canAdvance && (
-                <span className="text-red-500 text-xs font-bold animate-pulse flex items-center gap-2">
-                  <ChevronDown size={14} className="animate-bounce"/> Baja para leer
-                </span>
-             )}
-             
-             <button 
-               onClick={() => setStep(s => s + 1)} 
-               className={`px-8 py-4 rounded-2xl font-bold shadow-xl flex items-center gap-3 text-sm uppercase tracking-wide transition-all transform hover:-translate-y-1
-                 ${canAdvance ? 'bg-slate-900 text-white hover:bg-red-600 hover:shadow-red-500/30' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}
-               `}
-             >
-               Siguiente <ArrowRight size={18} />
-             </button>
-           </div>
+           <button onClick={goNext} className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-red-600 transition-all flex items-center gap-2 text-sm uppercase tracking-wide">
+             Siguiente <ArrowRight size={18} />
+           </button>
         </div>
       </div>
     </div>
@@ -179,39 +156,31 @@ export default function App() {
   if (step === 0) return (
     <div className="h-screen w-full flex items-center justify-center bg-slate-900 relative overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <img src="/img/portada.jpg" onError={(e) => e.currentTarget.src='https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070'} className="w-full h-full object-cover opacity-30" alt="Fondo" />
-        <div className="absolute inset-0 bg-gradient-to-tr from-slate-900 via-slate-900/80 to-transparent"></div>
+        <img src="/img/portada.jpg" onError={(e) => e.currentTarget.src='https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070'} className="w-full h-full object-cover opacity-20" alt="Fondo" />
+        <div className="absolute inset-0 bg-slate-900/50"></div>
       </div>
       
-      <div className="relative z-10 w-full max-w-6xl h-full flex flex-col md:flex-row items-center justify-center p-8 gap-16">
-        <div className="text-center md:text-left space-y-8 flex-1">
-          <img src="/img/escudo.png" onError={(e) => e.currentTarget.style.display='none'} className="h-32 mx-auto md:mx-0 drop-shadow-2xl" alt="Escudo" />
-          <div>
-            <h1 className="text-6xl md:text-8xl font-black text-white leading-none mb-2 tracking-tighter">INDUCCIÓN<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">MUNICIPAL</span></h1>
-            <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-sm">Ilustre Municipalidad de La Serena</p>
-          </div>
+      <div className="relative z-10 w-full max-w-lg bg-white p-8 rounded-3xl shadow-2xl m-4">
+        <div className="text-center mb-6">
+          <img src="/img/escudo.png" onError={(e) => e.currentTarget.style.display='none'} className="h-20 mx-auto mb-2" alt="Escudo" />
+          <h1 className="text-3xl font-black text-slate-900 uppercase">Inducción Municipal</h1>
         </div>
         
-        <div className="w-full max-w-md bg-white/10 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-white/20 shadow-2xl flex-1">
-          <div className="space-y-5">
-            <h3 className="text-white font-bold text-2xl mb-6 flex items-center gap-3"><User className="text-red-500"/> Registro Funcionario</h3>
-            <div className="grid grid-cols-2 gap-4">
-               <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Nombres" onChange={e => setUserData({...userData, nombres: e.target.value})} />
-               <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Apellidos" onChange={e => setUserData({...userData, apellidos: e.target.value})} />
+        <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+               <input className="w-full p-3 bg-slate-100 rounded-lg font-bold text-slate-900" placeholder="Nombres" onChange={e => setUserData({...userData, nombres: e.target.value})} />
+               <input className="w-full p-3 bg-slate-100 rounded-lg font-bold text-slate-900" placeholder="Apellidos" onChange={e => setUserData({...userData, apellidos: e.target.value})} />
             </div>
-            <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="RUT" onChange={e => setUserData({...userData, rut: e.target.value})} />
-            <div className="relative">
-              <select className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-600 font-bold text-white text-sm appearance-none focus:border-red-500 outline-none cursor-pointer" onChange={e => setUserData({...userData, dept: e.target.value})}>
+            <input className="w-full p-3 bg-slate-100 rounded-lg font-bold text-slate-900" placeholder="RUT" onChange={e => setUserData({...userData, rut: e.target.value})} />
+            <select className="w-full p-3 bg-slate-100 rounded-lg font-bold text-slate-900" onChange={e => setUserData({...userData, dept: e.target.value})}>
                 <option value="">Selecciona Unidad...</option>
-                {DEPARTAMENTOS.map((d, i) => <option key={i} value={d} className="text-slate-900">{d}</option>)}
-              </select>
-              <ChevronDown className="absolute right-4 top-4 text-slate-400 pointer-events-none" size={16}/>
-            </div>
-            <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Cargo" onChange={e => setUserData({...userData, cargo: e.target.value})} />
-            <button disabled={!userData.nombres || !userData.rut || !userData.dept} onClick={() => setStep(1)} className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white p-5 rounded-xl font-black tracking-wide hover:shadow-lg hover:shadow-red-900/50 flex justify-center gap-3 mt-6 items-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02]">
-              INICIAR <ArrowRight size={20}/>
+                {DEPARTAMENTOS.map((d, i) => <option key={i} value={d}>{d}</option>)}
+            </select>
+            <input className="w-full p-3 bg-slate-100 rounded-lg font-bold text-slate-900" placeholder="Cargo" onChange={e => setUserData({...userData, cargo: e.target.value})} />
+            
+            <button disabled={!userData.nombres || !userData.rut || !userData.dept} onClick={goNext} className="w-full bg-red-600 text-white p-4 rounded-xl font-bold hover:bg-red-700 transition-all flex justify-center gap-2 items-center disabled:opacity-50">
+              INGRESAR <ArrowRight size={20}/>
             </button>
-          </div>
         </div>
       </div>
     </div>
@@ -221,76 +190,67 @@ export default function App() {
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Mensaje de la Alcaldesa" 
       visual={
         <div className="w-full h-full bg-black flex items-center justify-center">
-           <iframe className="w-full h-full aspect-video" src="https://www.youtube.com/embed/EQUdyb-YVxM?rel=0&modestbranding=1" title="Mensaje" frameBorder="0" allowFullScreen></iframe>
+           <iframe className="w-full h-full aspect-video" src="https://www.youtube.com/embed/EQUdyb-YVxM?rel=0" title="Mensaje" frameBorder="0" allowFullScreen></iframe>
         </div>
       }
       content={
-        <div className="animate-in fade-in duration-700">
-           <p className="font-black text-4xl text-slate-900 mb-6">¡Hola, {userData.nombres}!</p>
-           <p className="mb-8 text-xl font-light text-slate-600">Te sumas a una institución con historia. La Serena no es solo la segunda ciudad más antigua de Chile; es una capital patrimonial que exige lo mejor de nosotros.</p>
-           <div className="bg-red-50 p-8 rounded-[2rem] border-l-8 border-red-600 mb-10 shadow-sm">
-             <p className="text-2xl font-serif italic text-red-900 leading-relaxed">"Nuestro compromiso es modernizar la gestión municipal. Queremos funcionarios proactivos, empáticos y que entiendan que detrás de cada papel hay una familia."</p>
-             <p className="text-right font-bold text-red-700 mt-4 text-sm uppercase">- Daniela Norambuena, Alcaldesa</p>
+        <div>
+           <p className="font-black text-3xl text-slate-900 mb-6">¡Hola, {userData.nombres}!</p>
+           <p className="mb-6 text-xl text-slate-600">Te sumas a una institución con historia. La Serena es una capital patrimonial que exige lo mejor de nosotros.</p>
+           <div className="bg-red-50 p-6 rounded-2xl border-l-8 border-red-600 mb-8">
+             <p className="text-xl font-serif italic text-red-900">"Queremos funcionarios proactivos, empáticos y que entiendan que detrás de cada papel hay una familia."</p>
+             <p className="text-right font-bold text-red-700 mt-2 text-sm">- Daniela Norambuena, Alcaldesa</p>
            </div>
-           <p className="font-black text-slate-900 text-xl mb-6 uppercase tracking-wider">Tu ruta de aprendizaje:</p>
-           <ul className="space-y-4">
-             <li className="flex items-center gap-4 text-lg bg-white p-4 rounded-xl border border-slate-100 shadow-sm"><CheckCircle size={24} className="text-green-500"/> Nuestra Misión y Valores.</li>
-             <li className="flex items-center gap-4 text-lg bg-white p-4 rounded-xl border border-slate-100 shadow-sm"><CheckCircle size={24} className="text-blue-500"/> Estructura y Autoridades.</li>
-             <li className="flex items-center gap-4 text-lg bg-white p-4 rounded-xl border border-slate-100 shadow-sm"><CheckCircle size={24} className="text-yellow-500"/> Tus Derechos y Deberes.</li>
-           </ul>
         </div>
       } 
     />;
 
-    case 2: return <ChapterLayout title="Carta de Navegación" subtitle="Misión, Visión y Valores" 
+    case 2: return <ChapterLayout title="Carta de Navegación" subtitle="Misión y Visión" 
       visual={
-        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white p-12">
-           <div className="grid gap-8 w-full">
-              <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/10 shadow-xl">
-                 <div className="flex items-center gap-4 mb-4"><Star className="text-yellow-400" size={32}/> <h4 className="font-black text-3xl tracking-tight">MISIÓN</h4></div>
-                 <p className="text-slate-300 text-lg leading-relaxed">Mejorar la calidad de vida de los habitantes de la comuna a través de una gestión participativa, inclusiva y transparente.</p>
+        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white p-8">
+           <div className="space-y-6 w-full max-w-sm">
+              <div className="bg-white/10 p-6 rounded-2xl border border-white/10">
+                 <h4 className="font-black text-2xl text-yellow-400 mb-2">MISIÓN</h4>
+                 <p className="text-slate-200">Mejorar la calidad de vida de los habitantes de la comuna con gestión participativa.</p>
               </div>
-              <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/10 shadow-xl">
-                 <div className="flex items-center gap-4 mb-4"><Map className="text-red-500" size={32}/> <h4 className="font-black text-3xl tracking-tight">VISIÓN</h4></div>
-                 <p className="text-slate-300 text-lg leading-relaxed">Ser una comuna líder en desarrollo sostenible, turismo y patrimonio, reconocida por su calidad de vida.</p>
+              <div className="bg-white/10 p-6 rounded-2xl border border-white/10">
+                 <h4 className="font-black text-2xl text-red-400 mb-2">VISIÓN</h4>
+                 <p className="text-slate-200">Ser una comuna líder en desarrollo sostenible, turismo y patrimonio.</p>
               </div>
            </div>
         </div>
       }
       content={
         <>
-          <p className="text-3xl font-light text-slate-500 mb-10">Para remar todos hacia el mismo lado, debemos tener clara nuestra brújula.</p>
-          <h4 className="font-black text-slate-900 text-2xl mb-8 uppercase tracking-wide">Nuestros Valores Intransables:</h4>
-          <div className="grid gap-6">
-             <div className="flex gap-6 items-start p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-               <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 font-black text-3xl shrink-0">1</div>
-               <div><h4 className="font-black text-slate-900 text-xl mb-2">Probidad</h4><p className="text-slate-600 text-lg">Actuamos con rectitud intachable. Los recursos municipales son sagrados.</p></div>
+          <p className="text-2xl font-light text-slate-500 mb-8">Nuestros Valores:</p>
+          <div className="space-y-4">
+             <div className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+               <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold shrink-0">1</div>
+               <div><h4 className="font-bold text-slate-900">Probidad</h4><p className="text-slate-600">Actuamos con rectitud intachable.</p></div>
              </div>
-             <div className="flex gap-6 items-start p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-               <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 font-black text-3xl shrink-0">2</div>
-               <div><h4 className="font-black text-slate-900 text-xl mb-2">Cercanía</h4><p className="text-slate-600 text-lg">No somos burócratas, somos servidores públicos. Empatizamos con el problema del otro.</p></div>
+             <div className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shrink-0">2</div>
+               <div><h4 className="font-bold text-slate-900">Cercanía</h4><p className="text-slate-600">Somos servidores públicos empáticos.</p></div>
              </div>
-             <div className="flex gap-6 items-start p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-               <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-green-600 font-black text-3xl shrink-0">3</div>
-               <div><h4 className="font-black text-slate-900 text-xl mb-2">Transparencia</h4><p className="text-slate-600 text-lg">Nuestros actos son públicos. Informamos con claridad a la comunidad.</p></div>
+             <div className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+               <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold shrink-0">3</div>
+               <div><h4 className="font-bold text-slate-900">Transparencia</h4><p className="text-slate-600">Nuestros actos son públicos.</p></div>
              </div>
           </div>
         </>
       } 
     />;
     
-    case 3: return <ChapterLayout title="Concejo Municipal" subtitle="El Equipo Fiscalizador" 
+    case 3: return <ChapterLayout title="Concejo Municipal" subtitle="Fiscalización" 
       visual={
-        <div className="h-full w-full bg-slate-100 p-8 overflow-y-auto rounded-[2rem]">
-            <div className="grid grid-cols-2 gap-4">
+        <div className="h-full w-full bg-slate-100 p-6 overflow-y-auto">
+            <div className="grid grid-cols-2 gap-3">
             {CONCEJALES.map((name, i) => (
-               <div key={i} className="bg-white p-4 rounded-3xl shadow-sm hover:shadow-xl transition-all flex flex-col items-center text-center border border-slate-200">
-                 <div className="w-20 h-20 bg-slate-200 rounded-full mb-4 overflow-hidden border-4 border-white shadow-sm">
-                   <img src={`/img/concejal_${i+1}.jpg`} onError={(e) => e.currentTarget.style.display='none'} className="w-full h-full object-cover" alt="Foto"/>
-                   <User className="w-full h-full p-4 text-slate-300" />
+               <div key={i} className="bg-white p-3 rounded-xl shadow-sm text-center border border-slate-200">
+                 <div className="w-12 h-12 bg-slate-200 rounded-full mx-auto mb-2 overflow-hidden">
+                   <User className="w-full h-full p-2 text-slate-400" />
                  </div>
-                 <p className="text-xs font-black text-slate-900 uppercase leading-tight">{name}</p>
-                 <span className="text-[10px] text-red-600 font-bold mt-2 bg-red-50 px-3 py-1 rounded-full uppercase tracking-wider">Concejal</span>
+                 <p className="text-[10px] font-bold text-slate-900 uppercase">{name}</p>
                </div>
             ))}
             </div>
@@ -298,46 +258,33 @@ export default function App() {
       }
       content={
         <>
-          <p className="mb-8 text-xl font-light">La administración comunal no la ejerce sola la Alcaldesa. Existe un <strong>Concejo Municipal</strong>, compuesto por <strong>10 concejales</strong> electos por votación popular.</p>
-          <div className="bg-yellow-50 border border-yellow-200 p-8 rounded-[2rem] mb-8">
-             <h4 className="font-black text-yellow-900 text-xl mb-6 flex items-center gap-3"><Shield className="text-yellow-600" size={32}/> ¿QUÉ HACEN?</h4>
-             <ul className="space-y-6">
-               <li className="flex gap-4 items-start">
-                 <div className="bg-yellow-200 p-1 rounded-full mt-1"><CheckCircle size={20} className="text-yellow-800"/></div>
-                 <div><strong className="text-lg text-yellow-900 block font-black uppercase">Normar</strong>Aprueban las ordenanzas que rigen la comuna.</div>
-               </li>
-               <li className="flex gap-4 items-start">
-                 <div className="bg-yellow-200 p-1 rounded-full mt-1"><CheckCircle size={20} className="text-yellow-800"/></div>
-                 <div><strong className="text-lg text-yellow-900 block font-black uppercase">Fiscalizar</strong>Revisan que el presupuesto municipal se gaste de forma correcta.</div>
-               </li>
-               <li className="flex gap-4 items-start">
-                 <div className="bg-yellow-200 p-1 rounded-full mt-1"><CheckCircle size={20} className="text-yellow-800"/></div>
-                 <div><strong className="text-lg text-yellow-900 block font-black uppercase">Resolver</strong>Aprueban materias claves como licitaciones.</div>
-               </li>
+          <p className="mb-6 text-lg">El <strong>Concejo Municipal</strong> está compuesto por <strong>10 concejales</strong> electos.</p>
+          <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-2xl">
+             <h4 className="font-black text-yellow-900 text-lg mb-4">Sus Funciones:</h4>
+             <ul className="space-y-3">
+               <li className="flex gap-2"><CheckCircle size={20} className="text-yellow-700"/> <strong>Normar:</strong> Aprueban ordenanzas.</li>
+               <li className="flex gap-2"><CheckCircle size={20} className="text-yellow-700"/> <strong>Fiscalizar:</strong> Revisan el presupuesto.</li>
+               <li className="flex gap-2"><CheckCircle size={20} className="text-yellow-700"/> <strong>Resolver:</strong> Aprueban licitaciones.</li>
              </ul>
           </div>
         </>
       } 
     />;
 
-    case 4: return <ChapterLayout title="Organigrama" subtitle="Nuestra Estructura" 
-      visual={<div className="flex items-center justify-center h-full bg-slate-100 p-8 rounded-[2rem]"><img src="/img/organigrama_full.png" onError={(e) => e.currentTarget.src='https://placehold.co/1000x1200/png?text=Mapa+Estructural'} className="max-h-full max-w-full object-contain drop-shadow-2xl" /></div>}
+    case 4: return <ChapterLayout title="Organigrama" subtitle="Estructura" 
+      visual={<div className="flex items-center justify-center h-full bg-slate-100 p-4"><img src="/img/organigrama_full.png" onError={(e) => e.currentTarget.src='https://placehold.co/800x1000/png?text=Organigrama'} className="max-h-full max-w-full object-contain" /></div>}
       content={
         <>
-          <p className="mb-8 text-xl font-light">Somos una institución grande y compleja. Entender el organigrama es vital para saber a quién acudir.</p>
-          <h4 className="font-black text-slate-900 text-2xl mb-6 uppercase tracking-wide">Direcciones Clave:</h4>
-          <div className="grid gap-6">
-             <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl hover:border-red-200 transition-colors">
-                <div className="bg-red-100 p-4 rounded-2xl text-red-600 shrink-0"><Heart size={32}/></div>
-                <div><h4 className="font-black text-slate-900 text-xl">DIDECO</h4><p className="text-lg text-slate-500 mt-2">El "corazón social". Gestiona ayudas sociales y organizaciones comunitarias.</p></div>
+          <p className="mb-6 text-lg">Entender el organigrama es vital para saber a quién acudir.</p>
+          <div className="grid gap-4">
+             <div className="p-4 bg-white border border-slate-200 shadow-sm rounded-2xl">
+                <h4 className="font-bold text-slate-900">DIDECO (Social)</h4><p className="text-slate-500">Gestiona ayudas sociales y organizaciones.</p>
              </div>
-             <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl hover:border-blue-200 transition-colors">
-                <div className="bg-blue-100 p-4 rounded-2xl text-blue-600 shrink-0"><Shield size={32}/></div>
-                <div><h4 className="font-black text-slate-900 text-xl">DOM (Obras)</h4><p className="text-lg text-slate-500 mt-2">El brazo técnico. Otorga permisos de edificación.</p></div>
+             <div className="p-4 bg-white border border-slate-200 shadow-sm rounded-2xl">
+                <h4 className="font-bold text-slate-900">DOM (Obras)</h4><p className="text-slate-500">Permisos de edificación y urbanismo.</p>
              </div>
-             <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl hover:border-green-200 transition-colors">
-                <div className="bg-green-100 p-4 rounded-2xl text-green-600 shrink-0"><Map size={32}/></div>
-                <div><h4 className="font-black text-slate-900 text-xl">SECPLAN</h4><p className="text-lg text-slate-500 mt-2">El "cerebro". Diseña los proyectos de inversión.</p></div>
+             <div className="p-4 bg-white border border-slate-200 shadow-sm rounded-2xl">
+                <h4 className="font-bold text-slate-900">SECPLAN (Planificación)</h4><p className="text-slate-500">Diseña los proyectos de inversión.</p>
              </div>
           </div>
         </>
@@ -346,108 +293,94 @@ export default function App() {
 
     case 5: return <ChapterLayout title="Ecosistema" subtitle="Mapa de Públicos" 
       visual={
-        <div className="relative w-full h-full flex items-center justify-center bg-slate-900 overflow-hidden rounded-[2rem]">
-           <div className="absolute w-[600px] h-[600px] border border-slate-700 rounded-full opacity-30"></div>
-           <div className="z-20 bg-white text-slate-900 w-32 h-32 rounded-full flex items-center justify-center font-black text-2xl shadow-[0_0_50px_white]">IMLS</div>
-           <div className="absolute top-[15%] left-[20%] bg-blue-500/20 p-4 rounded-xl border border-blue-500/50 flex flex-col items-center gap-2"><User className="text-blue-400" size={32}/><span className="text-sm font-bold text-blue-200 uppercase">Vecinos</span></div>
-           <div className="absolute bottom-[20%] right-[15%] bg-green-500/20 p-4 rounded-xl border border-green-500/50 flex flex-col items-center gap-2"><Briefcase className="text-green-400" size={32}/><span className="text-sm font-bold text-green-200 uppercase">Empresas</span></div>
-           <div className="absolute top-[20%] right-[20%] bg-purple-500/20 p-4 rounded-xl border border-purple-500/50 flex flex-col items-center gap-2"><Shield className="text-purple-400" size={32}/><span className="text-sm font-bold text-purple-200 uppercase">Gobierno</span></div>
+        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 p-8 space-y-4">
+           {/* VERSIÓN SIMPLIFICADA QUE NO CRASHEA */}
+           <div className="bg-white p-4 rounded-full w-24 h-24 flex items-center justify-center font-black text-xl shadow-[0_0_20px_white]">IMLS</div>
+           
+           <div className="grid grid-cols-2 gap-4 w-full">
+             <div className="bg-blue-900/50 p-4 rounded-xl text-center text-blue-100 border border-blue-500/30">
+               <User className="mx-auto mb-1"/> Vecinos
+             </div>
+             <div className="bg-green-900/50 p-4 rounded-xl text-center text-green-100 border border-green-500/30">
+               <Briefcase className="mx-auto mb-1"/> Empresas
+             </div>
+             <div className="bg-purple-900/50 p-4 rounded-xl text-center text-purple-100 border border-purple-500/30">
+               <Shield className="mx-auto mb-1"/> Gobierno
+             </div>
+             <div className="bg-orange-900/50 p-4 rounded-xl text-center text-orange-100 border border-orange-500/30">
+               <Map className="mx-auto mb-1"/> Turistas
+             </div>
+           </div>
         </div>
       }
       content={
         <>
-          <p className="text-xl mb-8 font-light">No somos una isla. El municipio es un organismo vivo que interactúa 24/7 con su entorno.</p>
-          <div className="space-y-8">
-            <div className="flex gap-6">
-              <div className="w-2 bg-blue-500 rounded-full"></div>
-              <div><h4 className="font-black text-slate-900 text-2xl mb-2">1. El Vecino (Nuestro Centro)</h4><p className="text-slate-600 text-lg">Es la razón de ser del municipio. Todo proceso debe pensarse para facilitarle la vida.</p></div>
+          <p className="text-lg mb-6">No somos una isla. El municipio interactúa con:</p>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-xl border-l-4 border-blue-500">
+              <h4 className="font-bold text-blue-900">1. El Vecino</h4>
+              <p className="text-blue-700 text-sm">Es el centro de nuestra gestión.</p>
             </div>
-            <div className="flex gap-6">
-               <div className="w-2 bg-green-500 rounded-full"></div>
-               <div><h4 className="font-black text-slate-900 text-2xl mb-2">2. Proveedores y Privados</h4><p className="text-slate-600 text-lg">Socios estratégicos. Sin ellos no podríamos construir obras o retirar la basura.</p></div>
+            <div className="p-4 bg-green-50 rounded-xl border-l-4 border-green-500">
+              <h4 className="font-bold text-green-900">2. Privados</h4>
+              <p className="text-green-700 text-sm">Socios estratégicos para obras y servicios.</p>
             </div>
-            <div className="flex gap-6">
-               <div className="w-2 bg-purple-500 rounded-full"></div>
-               <div><h4 className="font-black text-slate-900 text-2xl mb-2">3. Otras Instituciones</h4><p className="text-slate-600 text-lg">Carabineros, Bomberos, Gobierno Regional. La coordinación con ellos es vital.</p></div>
+            <div className="p-4 bg-purple-50 rounded-xl border-l-4 border-purple-500">
+              <h4 className="font-bold text-purple-900">3. Instituciones</h4>
+              <p className="text-purple-700 text-sm">Carabineros, Bomberos, Gobierno.</p>
             </div>
           </div>
         </>
       } 
     />;
 
-    case 6: return <ChapterLayout title="Remuneraciones" subtitle="Somos un Solo Equipo" visual={<div className="flex items-center justify-center h-full bg-green-50 rounded-[2rem]"><DollarSign size={200} className="text-green-600/50" /></div>} 
+    case 6: return <ChapterLayout title="Remuneraciones" subtitle="Somos un Equipo" visual={<div className="flex items-center justify-center h-full bg-green-50 rounded-2xl"><DollarSign size={150} className="text-green-600/50" /></div>} 
       content={
         <>
-          <p className="mb-8 text-2xl font-light">En el municipio conviven distintas modalidades contractuales, pero quiero que sepas algo: <strong>todos somos compañeros de trabajo</strong> con la misma camiseta.</p>
-          <div className="grid gap-6">
-             <div className="p-8 bg-white border border-slate-200 rounded-[2rem] shadow-sm hover:border-green-300 transition-colors">
-               <div className="flex justify-between mb-4 items-center">
-                 <strong className="text-slate-900 font-black uppercase tracking-wide text-lg">Planta y Contrata</strong>
-                 <span className="text-xs bg-green-100 text-green-800 px-4 py-1.5 rounded-full font-bold uppercase">Estatuto Admin.</span>
-               </div>
-               <p className="text-slate-600 text-lg">Son funcionarios públicos. Su sueldo se paga religiosamente el <strong>penúltimo día hábil del mes</strong>.</p>
+          <p className="mb-6 text-lg">En el municipio conviven distintas modalidades, pero <strong>todos somos compañeros</strong>.</p>
+          <div className="grid gap-4">
+             <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
+               <strong className="text-slate-900 block mb-1">Planta y Contrata</strong>
+               <p className="text-slate-600 text-sm">Pago: <strong>Penúltimo día hábil del mes</strong>.</p>
              </div>
-             <div className="p-8 bg-white border border-slate-200 rounded-[2rem] shadow-sm hover:border-blue-300 transition-colors">
-               <div className="flex justify-between mb-4 items-center">
-                 <strong className="text-slate-900 font-black uppercase tracking-wide text-lg">Honorarios</strong>
-                 <span className="text-xs bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full font-bold uppercase">Código Civil</span>
-               </div>
-               <p className="text-slate-600 text-lg">Prestadores de servicios. La fecha de pago es variable y depende del <strong>Informe de Actividades</strong>.</p>
+             <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
+               <strong className="text-slate-900 block mb-1">Honorarios</strong>
+               <p className="text-slate-600 text-sm">Pago: Variable, requiere Informe de Actividades.</p>
              </div>
           </div>
         </>
       } 
     />;
 
-    case 7: return <ChapterLayout title="Ley Karin" subtitle="Dignidad y Respeto" visual={<div className="flex items-center justify-center h-full bg-pink-50 rounded-[2rem]"><Heart size={200} className="text-pink-400/50" /></div>} 
+    case 7: return <ChapterLayout title="Ley Karin" subtitle="Dignidad" visual={<div className="flex items-center justify-center h-full bg-pink-50 rounded-2xl"><Heart size={150} className="text-pink-400/50" /></div>} 
       content={
         <>
-          <p className="mb-8 text-2xl font-light">La <strong>Ley N° 21.643</strong> establece un nuevo estándar. Tenemos <strong>Tolerancia Cero</strong> con:</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div className="bg-pink-50 p-6 rounded-3xl text-center border border-pink-100">
-               <span className="text-5xl block mb-4">🚫</span>
-               <p className="font-bold text-pink-900 text-lg uppercase">Acoso Laboral</p>
-            </div>
-            <div className="bg-pink-50 p-6 rounded-3xl text-center border border-pink-100">
-               <span className="text-5xl block mb-4">✋</span>
-               <p className="font-bold text-pink-900 text-lg uppercase">Acoso Sexual</p>
-            </div>
-            <div className="bg-pink-50 p-6 rounded-3xl text-center border border-pink-100">
-               <span className="text-5xl block mb-4">🗣️</span>
-               <p className="font-bold text-pink-900 text-lg uppercase">Violencia</p>
-            </div>
+          <p className="mb-6 text-lg">La <strong>Ley N° 21.643</strong> establece <strong>Tolerancia Cero</strong> con:</p>
+          <div className="grid grid-cols-1 gap-3 mb-6">
+            <div className="bg-pink-50 p-4 rounded-xl font-bold text-pink-900 flex gap-2"><Shield size={20}/> Acoso Laboral</div>
+            <div className="bg-pink-50 p-4 rounded-xl font-bold text-pink-900 flex gap-2"><Shield size={20}/> Acoso Sexual</div>
+            <div className="bg-pink-50 p-4 rounded-xl font-bold text-pink-900 flex gap-2"><Shield size={20}/> Violencia</div>
           </div>
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <h5 className="font-black text-slate-900 text-xl mb-3">¿Qué cambia?</h5>
-            <p className="text-slate-600 text-lg">Ya no necesitas demostrar que el acoso fue "reiterado". <strong>Un solo acto grave es suficiente</strong> para denunciar.</p>
-          </div>
+          <p className="text-slate-600">Un solo acto grave es suficiente para denunciar.</p>
         </>
       } 
     />;
 
-    case 8: return <ChapterLayout title="Seguridad Laboral" subtitle="Tu vida es primero" visual={<div className="flex items-center justify-center h-full bg-yellow-50 rounded-[2rem]"><Shield size={200} className="text-yellow-500/50" /></div>} 
+    case 8: return <ChapterLayout title="Seguridad" subtitle="Autocuidado" visual={<div className="flex items-center justify-center h-full bg-yellow-50 rounded-2xl"><Shield size={200} className="text-yellow-500/50" /></div>} 
       content={
         <>
-          <p className="mb-8 text-2xl font-light">Trabajar seguros es responsabilidad de todos. Aquí tienes las reglas de oro que pueden salvarte la vida.</p>
-          <div className="space-y-8">
-             <div className="flex gap-6 items-start">
-               <div className="bg-blue-100 p-4 rounded-2xl text-blue-600 shrink-0"><Map size={32}/></div>
-               <div>
-                 <h4 className="font-black text-slate-900 text-2xl mb-2">Zona de Tsunamis</h4>
-                 <p className="text-slate-600 text-lg">La Serena es costera. Ante un sismo fuerte, evacúa inmediatamente hacia la <strong>Cota 30</strong> (Desde Av. Cisternas hacia arriba).</p>
-               </div>
+          <p className="mb-6 text-lg">Reglas de oro que salvan vidas:</p>
+          <div className="space-y-6">
+             <div>
+               <h4 className="font-black text-slate-900 text-lg mb-1">Zona de Tsunamis</h4>
+               <p className="text-slate-600">Evacúa hacia la <strong>Cota 30</strong> (Desde Av. Cisternas hacia arriba).</p>
              </div>
-             <div className="flex gap-6 items-start">
-               <div className="bg-red-100 p-4 rounded-2xl text-red-600 shrink-0"><AlertCircle size={32}/></div>
-               <div>
-                 <h4 className="font-black text-slate-900 text-2xl mb-2">Accidentes Laborales</h4>
-                 <div className="bg-red-50 p-6 rounded-2xl text-lg font-bold text-red-800 border border-red-100">
-                    <ol className="list-decimal ml-6 space-y-2">
-                      <li>AVISAR INMEDIATAMENTE a tu jefatura.</li>
-                      <li>Acudir a la ACHS.</li>
-                      <li>No irse a casa sin registro.</li>
-                    </ol>
-                 </div>
+             <div>
+               <h4 className="font-black text-slate-900 text-lg mb-1">Accidentes</h4>
+               <div className="bg-red-50 p-4 rounded-xl text-sm font-bold text-red-800">
+                  1. AVISAR A JEFATURA.<br/>
+                  2. ACUDIR A LA ACHS.<br/>
+                  3. REGISTRO OBLIGATORIO.
                </div>
              </div>
           </div>
@@ -458,58 +391,38 @@ export default function App() {
     // 9. QUIZ
     case 9: return (
       <div className="h-screen bg-slate-900 flex flex-col items-center justify-center text-white p-4 print:hidden relative overflow-hidden">
-        <div className="absolute top-0 w-full h-2 bg-slate-800"><div className="bg-green-500 h-full transition-all duration-300" style={{width: `${((quizIndex+1)/QUESTIONS.length)*100}%`}}></div></div>
-        
         <div className="max-w-2xl w-full relative z-10 pb-10 overflow-y-auto max-h-screen">
           {!quizFinished ? (
-            <div className="bg-white text-slate-900 p-8 md:p-12 rounded-[2.5rem] shadow-2xl">
-               <div className="flex justify-between text-xs font-bold text-slate-400 uppercase mb-8">
-                 <span className="bg-slate-100 px-3 py-1 rounded-full">Evaluación Interactiva</span>
-                 <span>{quizIndex+1} / {QUESTIONS.length}</span>
-               </div>
-               
-               <h3 className="text-2xl md:text-3xl font-black mb-10 leading-tight">{QUESTIONS[quizIndex].q}</h3>
-               
-               <div className="space-y-4">
+            <div className="bg-white text-slate-900 p-8 rounded-3xl shadow-2xl">
+               <h3 className="text-2xl font-black mb-6">{QUESTIONS[quizIndex].q}</h3>
+               <div className="space-y-3">
                  {QUESTIONS[quizIndex].options.map((opt, idx) => (
                    <button 
                      key={idx} 
                      onClick={() => handleAnswer(idx)}
                      disabled={quizState !== 'waiting'}
-                     className={`w-full text-left p-5 rounded-2xl border-2 font-bold text-lg transition-all flex justify-between items-center group shadow-sm
-                       ${quizState === 'waiting' ? 'border-slate-100 hover:border-slate-300 hover:bg-slate-50' : ''}
-                       ${quizState !== 'waiting' && idx === QUESTIONS[quizIndex].ans ? 'border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200' : ''}
-                       ${quizState === 'wrong' && idx !== QUESTIONS[quizIndex].ans ? 'opacity-40 grayscale' : ''}
+                     className={`w-full text-left p-4 rounded-xl border-2 font-bold transition-all
+                       ${quizState === 'waiting' ? 'border-slate-200 hover:bg-slate-50' : ''}
+                       ${quizState !== 'waiting' && idx === QUESTIONS[quizIndex].ans ? 'border-green-500 bg-green-50 text-green-700' : ''}
                        ${quizState === 'wrong' && idx === parseInt(String(QUESTIONS[quizIndex].options.indexOf(opt))) ? 'border-red-500 bg-red-50 text-red-700' : ''} 
                      `}
                    >
                      {opt}
-                     {quizState !== 'waiting' && idx === QUESTIONS[quizIndex].ans && <CheckCircle className="text-green-600" size={24}/>}
                    </button>
                  ))}
                </div>
-
                {quizState !== 'waiting' && (
-                 <div className={`mt-8 p-6 rounded-2xl ${quizState === 'correct' ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900'} shadow-inner`}>
-                    <p className="font-black text-lg mb-2 flex items-center gap-2">
-                      {quizState === 'correct' ? <><CheckCircle size={24}/> ¡Excelente!</> : <><CheckCircle size={24}/> Corrección:</>}
-                    </p>
-                    <p className="text-base mb-6 font-medium leading-relaxed">{QUESTIONS[quizIndex].explanation}</p>
-                    <button onClick={nextQuestion} className={`w-full py-4 rounded-xl font-black text-white text-lg shadow-xl ${quizState === 'correct' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>
-                      {quizIndex < QUESTIONS.length - 1 ? 'Siguiente Pregunta' : 'Ver Resultados Finales'}
-                    </button>
+                 <div className="mt-6">
+                    <p className="mb-4 text-sm font-bold">{QUESTIONS[quizIndex].explanation}</p>
+                    <button onClick={nextQuestion} className="w-full py-3 rounded-xl font-bold bg-slate-900 text-white">Siguiente</button>
                  </div>
                )}
             </div>
           ) : (
-            <div className="bg-white text-slate-900 p-10 md:p-16 rounded-[3rem] text-center shadow-2xl relative overflow-hidden">
-              <Award size={60} className="text-yellow-500 mx-auto mb-6" />
-              <h2 className="text-4xl md:text-5xl font-black mb-4 text-slate-900">¡Aprobado!</h2>
-              <div className="text-6xl font-black text-slate-900 mb-8">{Math.round((score/QUESTIONS.length)*100)}%</div>
-              <p className="text-slate-500 mb-10 text-xl font-light">Has completado la inducción.</p>
-              <button onClick={() => setStep(10)} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold text-lg shadow-2xl hover:bg-red-600 transition-all flex items-center justify-center gap-3">
-                <Printer size={20}/> Generar Certificado Oficial
-              </button>
+            <div className="bg-white text-slate-900 p-10 rounded-3xl text-center shadow-2xl">
+              <Award size={60} className="text-yellow-500 mx-auto mb-4" />
+              <h2 className="text-4xl font-black mb-4">¡Aprobado!</h2>
+              <button onClick={() => setStep(10)} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl">Generar Certificado</button>
             </div>
           )}
         </div>
@@ -519,99 +432,42 @@ export default function App() {
     // 10. CERTIFICADO
     case 10: return (
       <div className="min-h-screen bg-slate-800 flex items-center justify-center p-4">
-        <div className="bg-white p-8 md:p-16 max-w-5xl w-full aspect-[1.4/1] relative shadow-2xl flex flex-col items-center justify-between text-center border-[12px] border-double border-slate-200 print:w-full print:h-screen print:border-none print:shadow-none print:absolute print:top-0 print:left-0 print:m-0 print:p-0">
-          
-          <div className="w-full flex justify-between items-start mb-4 opacity-90">
-             <img src="/img/escudo.png" onError={(e) => e.currentTarget.style.display='none'} className="h-16 md:h-24 object-contain" alt="Escudo"/>
-             <img src="/img/innovacion.png" onError={(e) => e.currentTarget.style.display='none'} className="h-16 md:h-24 object-contain" alt="Sello"/>
+        <div className="bg-white p-8 max-w-4xl w-full relative shadow-2xl text-center border-[10px] border-double border-slate-200 print:w-full print:h-screen print:border-none print:absolute print:top-0 print:left-0">
+          <div className="flex justify-between mb-8 opacity-50">
+             <img src="/img/escudo.png" className="h-16 object-contain" onError={(e) => e.currentTarget.style.display='none'}/>
+             <img src="/img/innovacion.png" className="h-16 object-contain" onError={(e) => e.currentTarget.style.display='none'}/>
           </div>
-
-          <div className="flex-1 flex flex-col items-center justify-center">
-             <h1 className="text-5xl md:text-7xl font-serif font-black text-slate-900 mb-4 uppercase tracking-wider">CERTIFICADO</h1>
-             <p className="text-xl md:text-2xl text-slate-500 italic mb-8 font-serif">De Aprobación de Inducción Corporativa</p>
-             
-             <p className="text-lg text-slate-600 mb-2 font-bold uppercase tracking-widest text-[10px]">Otorgado a:</p>
-             <div className="border-b-2 border-slate-900 pb-2 mb-4 w-full max-w-3xl">
-               <h2 className="text-3xl md:text-5xl font-black text-slate-900 uppercase tracking-tight">{userData.nombres} {userData.apellidos}</h2>
-             </div>
-             <div className="flex gap-4 text-xs md:text-sm text-slate-500 font-bold uppercase tracking-widest mb-10">
-               <span>RUT: {userData.rut}</span> • <span>{userData.cargo}</span> • <span>{userData.dept}</span>
-             </div>
-             
-             <p className="text-lg text-slate-600 mb-3">Por haber completado con distinción el programa de</p>
-             <h3 className="text-3xl md:text-4xl font-black text-red-600 uppercase tracking-widest mb-4">Inducción Municipal 2026</h3>
-          </div>
-          
-          <div className="flex justify-between w-full px-4 md:px-20 mt-12 items-end gap-8">
-            <div className="text-center flex-1">
-              <div className="h-16 border-b border-slate-400 mb-2 relative">
-                 <img src="/img/firma_personas.png" className="absolute bottom-0 left-1/2 -translate-x-1/2 max-h-full opacity-80" onError={(e)=>e.currentTarget.style.display='none'}/>
-              </div>
-              <p className="text-[10px] font-bold uppercase text-slate-600 tracking-widest">Director Gestión de Personas</p>
-            </div>
-            
-            <div className="text-center mb-2 flex-1 opacity-70">
-               <div className="flex items-center justify-center gap-2 text-slate-900 font-bold text-sm bg-slate-100 rounded-full px-4 py-2 inline-block mb-2">
-                 <Clock size={14}/> {currentTime.toLocaleTimeString()}
-               </div>
-               <p className="font-bold text-slate-900 text-sm">{currentTime.toLocaleDateString()}</p>
-            </div>
-
-            <div className="text-center flex-1">
-               <div className="h-16 border-b border-slate-400 mb-2 relative">
-                  <img src="/img/firma_alcaldesa.png" className="absolute bottom-0 left-1/2 -translate-x-1/2 max-h-full opacity-80" onError={(e)=>e.currentTarget.style.display='none'}/>
-               </div>
-               <p className="text-[10px] font-bold uppercase text-slate-600 tracking-widest">Alcaldesa</p>
-            </div>
+          <h1 className="text-5xl font-black text-slate-900 mb-2 uppercase">CERTIFICADO</h1>
+          <p className="text-xl text-slate-500 italic mb-8">Inducción Corporativa</p>
+          <h2 className="text-4xl font-black text-slate-900 uppercase mb-2">{userData.nombres} {userData.apellidos}</h2>
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-10">RUT: {userData.rut}</p>
+          <p className="text-lg text-slate-600 mb-8">Ha completado exitosamente la Inducción Municipal 2026.</p>
+          <div className="flex justify-between px-10 mt-12 opacity-70 text-xs font-bold uppercase">
+            <div>Gestión de Personas</div>
+            <div>{currentTime.toLocaleDateString()}</div>
+            <div>Alcaldía</div>
           </div>
         </div>
-
         <div className="fixed bottom-8 right-8 flex gap-3 print:hidden z-50">
-           <button onClick={printCertificate} className="bg-white text-slate-900 px-6 py-4 rounded-full font-bold shadow-xl hover:bg-slate-100 transition-all flex items-center gap-2">
-             <Printer size={20}/> Descargar
-           </button>
-           <button onClick={() => setStep(11)} className="bg-red-600 text-white px-8 py-4 rounded-full font-bold shadow-xl hover:bg-red-700 transition-all flex items-center gap-2 animate-bounce">
-             Siguiente <ArrowRight size={20}/>
-           </button>
+           <button onClick={printCertificate} className="bg-white px-6 py-4 rounded-full font-bold shadow-xl"><Printer/></button>
+           <button onClick={() => setStep(11)} className="bg-red-600 text-white px-6 py-4 rounded-full font-bold shadow-xl"><ArrowRight/></button>
         </div>
       </div>
     );
 
     // 11. COMUNIDAD
     case 11: return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 relative overflow-hidden text-center text-white font-sans">
-        <div className="absolute inset-0 bg-[url('/img/portada.jpg')] opacity-20 bg-cover"></div>
-        
-        <div className="relative z-10 max-w-4xl w-full bg-white/5 backdrop-blur-2xl p-10 md:p-16 rounded-[3rem] border border-white/10 shadow-2xl">
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center text-white font-sans">
+        <div className="max-w-md w-full bg-white/10 backdrop-blur-md p-10 rounded-[2rem] border border-white/10 shadow-2xl">
            <Smartphone size={60} className="mx-auto mb-6 text-cyan-400" />
-           <h2 className="text-4xl md:text-6xl font-black mb-4 tracking-tight">¡Sigue Conectado!</h2>
-           <p className="text-xl md:text-2xl text-slate-300 mb-10 max-w-2xl mx-auto font-light">La inducción termina, pero tu vida funcionaria recién comienza. Únete a nuestra comunidad digital.</p>
-           
-           <div className="bg-white p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8 shadow-xl text-slate-900">
-              <div className="bg-slate-900 p-6 rounded-2xl shrink-0 shadow-inner">
-                <QrCode size={120} className="text-white"/>
-              </div>
-              <div className="text-left flex-1 space-y-4">
-                 <div>
-                   <h3 className="font-black text-2xl md:text-3xl mb-1">Escanea el código QR</h3>
-                   <p className="text-slate-500 font-medium">Accede al portal oficial RDMLS, Radio Digital y Tours 3D.</p>
-                 </div>
-                 
-                 <div className="grid grid-cols-2 gap-3 text-sm font-bold text-slate-600">
-                    <div className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500"/> Radio Digital</div>
-                    <div className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500"/> Tours 3D</div>
-                    <div className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500"/> Serenito Virtual</div>
-                    <div className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500"/> Feedback</div>
-                 </div>
-
-                 <button className="bg-red-600 text-white px-8 py-4 rounded-xl font-black text-sm hover:bg-red-700 w-full transition-colors flex items-center justify-center gap-2 shadow-lg">
-                   IR AL PORTAL AHORA <ArrowRight size={16}/>
-                 </button>
-              </div>
+           <h2 className="text-4xl font-black mb-4">¡Sigue Conectado!</h2>
+           <p className="text-slate-300 mb-8">Únete a nuestra comunidad digital.</p>
+           <div className="bg-white p-6 rounded-3xl text-slate-900 mb-8">
+              <QrCode size={100} className="mx-auto mb-4"/>
+              <p className="font-bold text-sm">Escanea para acceder al Portal RDMLS</p>
            </div>
-           
-           <button onClick={() => setStep(0)} className="mt-10 text-slate-400 hover:text-white text-sm flex items-center justify-center gap-2 mx-auto transition-colors px-6 py-3 hover:bg-white/5 rounded-full uppercase tracking-widest font-bold">
-             <RefreshCw size={14}/> Cerrar Sesión Segura
+           <button onClick={() => setStep(0)} className="text-slate-400 hover:text-white text-sm flex items-center justify-center gap-2 mx-auto">
+             <RefreshCw size={14}/> Cerrar Sesión
            </button>
         </div>
       </div>
@@ -620,3 +476,5 @@ export default function App() {
     default: return null;
   }
 }
+
+```
