@@ -7,11 +7,22 @@ import {
   ArrowRight, Play, Radio, MessageCircle, Zap, 
   HeartHandshake, Smile, Activity, Stethoscope, AlertTriangle, Star, 
   Target, Users, Landmark, MapPin, Search, GraduationCap, Phone, 
-  Eye, Info, HardHat, BookOpen, Globe, PenTool
+  Eye, Info, HardHat, BookOpen, Globe
 } from 'lucide-react';
 
 // --- DATA MUNICIPAL ---
-const DEPARTAMENTOS = ["Alcaldía", "Administración Municipal", "Secretaría Municipal", "SECPLAN", "DIDECO", "Dirección de Obras (DOM)", "Gestión de Personas", "Seguridad Ciudadana", "Tránsito", "Turismo", "Servicios a la Comunidad", "Salud", "Educación"];
+const DEPARTAMENTOS = [
+  { name: "Alcaldía", desc: "Liderazgo estratégico." },
+  { name: "Administración", desc: "Coordinación interna." },
+  { name: "DIDECO", desc: "Desarrollo social." },
+  { name: "SECPLAN", desc: "Inversión y proyectos." },
+  { name: "Obras (DOM)", desc: "Urbanismo y permisos." },
+  { name: "Gestión Personas", desc: "Bienestar funcionario." },
+  { name: "Seguridad", desc: "Prevención 1420." },
+  { name: "Tránsito", desc: "Licencias y vialidad." },
+  { name: "Servicios", desc: "Aseo y Ornato." },
+  { name: "Jurídica", desc: "Marco legal." }
+];
 
 const CONCEJALES = ["Cristian Marín", "Rayen Pojomovsky", "Alejandro Astudillo", "Gladys Marín", "Francisca Barahona", "María Teresita Prouvay", "Camilo Araya", "María Marcela Damke", "Matías Espinosa", "Luisa Jinete"];
 
@@ -23,7 +34,7 @@ const QUESTIONS = [
   { q: "¿Organismo de seguridad laboral?", options: ["ACHS", "Mutual de Seguridad", "ISL"], ans: 1, explanation: "Estamos adheridos a la Mutual de Seguridad CChC." },
   { q: "¿Dónde evacuar por Tsunami?", options: ["Al Faro", "Cota 30 (Av. Cisternas)", "Playa"], ans: 1, explanation: "Siempre hacia la zona de seguridad sobre la Cota 30." },
   { q: "¿Quién diseña proyectos Smart City?", options: ["SECPLAN", "DIDECO", "Tránsito"], ans: 0, explanation: "SECPLAN es el cerebro técnico de la planificación." },
-  { q: "¿Qué es RDMLS?", options: ["Radio Digital", "Una oficina", "Un trámite"], ans: 0, explanation: "Radio Digital Municipal La Serena." },
+  { q: "¿Qué es RDMLS?", options: ["Una oficina", "Radio Digital Municipal", "Un trámite"], ans: 1, explanation: "La Radio Digital Municipal, nuestra voz oficial." },
   { q: "¿Valor intransable?", options: ["Rapidez", "Probidad", "Simpatía"], ans: 1, explanation: "La Probidad es la base ética de nuestra función." },
   { q: "¿Qué hacer al terminar?", options: ["Irse", "Unirse a la Comunidad Digital", "Nada"], ans: 1, explanation: "¡Bienvenido! Súmate a nuestras redes y portales." },
 ];
@@ -53,22 +64,26 @@ export default function App() {
 
   const handleScroll = (e: any) => {
     const el = e.target;
-    if (el.scrollHeight - el.scrollTop <= el.clientHeight + 100) {
+    // Margen grande (150px) para asegurar detección en móviles
+    if (el.scrollHeight - el.scrollTop <= el.clientHeight + 150) {
       setCanAdvance(true);
     }
   };
 
   useEffect(() => {
+    // Pasos que NO requieren scroll
     if ([0, 1, 11, 12].includes(step)) {
       setCanAdvance(true);
     } else {
       setCanAdvance(false);
+      // Fallback por si el contenido es corto
       setTimeout(() => {
         if (scrollRef.current && scrollRef.current.scrollHeight <= scrollRef.current.clientHeight + 50) {
           setCanAdvance(true);
         }
-      }, 1000);
+      }, 1500);
     }
+    // Scroll reset
     window.scrollTo(0, 0);
     if(scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [step]);
@@ -86,29 +101,33 @@ export default function App() {
     }
   };
 
+  const printCertificate = () => window.print();
+
   // --- LAYOUT ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="flex flex-col h-[100dvh] w-full bg-slate-950 text-slate-100 font-sans overflow-hidden">
+      
+      {/* Barra Progreso */}
       <div className="fixed top-0 left-0 w-full h-1.5 bg-slate-800 z-[100]">
         <div className="h-full bg-gradient-to-r from-red-600 to-orange-500 shadow-[0_0_20px_red] transition-all duration-700" style={{ width: `${(step / 12) * 100}%` }}></div>
       </div>
       
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* VISUAL (Móvil: Arriba, PC: Izq) */}
+        {/* VISUAL (Arriba en móvil, Izq en PC) */}
         <div className="w-full lg:w-1/2 h-[35vh] lg:h-full bg-slate-900 flex items-center justify-center p-4 lg:p-12 relative border-b lg:border-b-0 lg:border-r border-white/5 z-10">
-           <div className="w-full h-full lg:rounded-[3rem] overflow-hidden shadow-2xl bg-black border border-white/10 flex items-center justify-center relative">
+           <div className="w-full h-full lg:rounded-[3rem] overflow-hidden shadow-2xl bg-black border border-white/10 flex items-center justify-center relative backdrop-blur-3xl">
              {visual}
            </div>
         </div>
 
-        {/* CONTENIDO (Móvil: Abajo, PC: Der) */}
+        {/* CONTENIDO (Abajo en móvil, Der en PC) */}
         <div className="w-full lg:w-1/2 flex flex-col h-[65vh] lg:h-full bg-slate-950 overflow-hidden relative z-20">
           <div className="px-8 lg:px-16 pt-10 pb-6 shrink-0 border-b border-white/5 bg-slate-950/95 backdrop-blur-md">
              <div className="flex items-center gap-3 mb-2">
                 <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">PASO {step}</span>
-                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest pl-2">INDUCCIÓN IMLS</span>
+                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest pl-2 border-l border-white/20">INDUCCIÓN 2026</span>
              </div>
-             <h2 className="text-3xl lg:text-5xl font-black text-white leading-none tracking-tighter uppercase italic mb-1">{title}</h2>
+             <h2 className="text-2xl lg:text-5xl font-black text-white leading-none tracking-tighter uppercase italic mb-1">{title}</h2>
              <h3 className="text-lg lg:text-2xl text-slate-400 font-serif italic">{subtitle}</h3>
           </div>
 
@@ -120,6 +139,7 @@ export default function App() {
         </div>
       </div>
 
+      {/* FOOTER NAVEGACIÓN FIJO */}
       <div className="h-24 lg:h-28 shrink-0 bg-slate-900/95 backdrop-blur-xl border-t border-white/10 px-8 lg:px-20 flex items-center justify-between z-50 absolute bottom-0 w-full shadow-2xl">
           <button onClick={goBack} className="text-slate-500 hover:text-white font-bold text-xs uppercase flex items-center gap-2 p-4 transition-colors">
             <ChevronLeft size={20}/> ATRÁS
@@ -128,7 +148,7 @@ export default function App() {
           <div className="flex items-center gap-6">
             {!canAdvance && (
                <div className="hidden sm:flex items-center gap-2 text-red-500 text-[10px] font-black uppercase tracking-widest animate-pulse">
-                 <ChevronDown size={20}/> Baja para avanzar
+                 <ChevronDown size={20}/> Desliza para avanzar
                </div>
             )}
             <button 
@@ -146,14 +166,14 @@ export default function App() {
     </div>
   );
 
-  // --- PANTALLA 0: LOGIN ---
+  // --- PASO 0: LOGIN ---
   if (step === 0) return (
     <div className="h-screen w-full flex items-center justify-center bg-slate-950 relative overflow-hidden font-sans">
       <div className="absolute inset-0 bg-[url('/img/portada.jpg')] bg-cover opacity-30 blur-md scale-110"></div>
       <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900/90 to-transparent"></div>
       
       <div className="relative z-10 w-full max-w-7xl flex flex-col md:flex-row items-center p-8 gap-16">
-        <div className="text-center md:text-left space-y-8 flex-1">
+        <div className="text-center md:text-left space-y-8 flex-1 animate-in slide-in-from-left-10 duration-1000">
           <img src="/img/escudo.png" className="h-32 lg:h-48 mx-auto md:mx-0 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]" onError={(e) => e.currentTarget.style.display='none'} />
           <h1 className="text-6xl lg:text-[8rem] font-black text-white leading-[0.8] tracking-tighter uppercase italic">INDUCCIÓN<br/><span className="text-red-600 font-normal italic">IMLS 2026</span></h1>
           <p className="text-slate-400 font-bold uppercase tracking-[0.5em] text-xs pl-4 border-l-4 border-red-600 mt-6">Smart City • Patrimonio</p>
@@ -168,7 +188,7 @@ export default function App() {
             </div>
             <input className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-red-600 outline-none" placeholder="RUT" value={userData.rut} onChange={e => setUserData({...userData, rut: e.target.value})}/>
             <select className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-sm outline-none focus:border-red-600 bg-slate-900" value={userData.dept} onChange={e => setUserData({...userData, dept: e.target.value})}>
-                {DEPARTAMENTOS.map((d, i) => <option key={i} value={d}>{d}</option>)}
+                {DEPARTAMENTOS.map((d, i) => <option key={i} value={d.name}>{d.name}</option>)}
             </select>
             <button onClick={() => setStep(1)} className="w-full bg-red-600 text-white py-6 rounded-2xl font-black tracking-widest hover:bg-red-500 shadow-xl shadow-red-900/40 transition-all uppercase text-lg mt-4 flex items-center justify-center gap-3">INGRESAR <ArrowRight size={20}/></button>
           </div>
@@ -178,21 +198,22 @@ export default function App() {
   );
 
   switch (step) {
-    // 1. VIDEO (NATIVO, SIN SCRIPTS RAROS)
+    // 1. VIDEO NATIVO (LA SOLUCIÓN INFALIBLE)
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Daniela Norambuena, Alcaldesa" 
       visual={
-        <div className="w-full h-full bg-black rounded-[2rem] overflow-hidden shadow-2xl border border-white/20">
+        <div className="w-full h-full bg-black rounded-[2rem] overflow-hidden border border-white/20 shadow-2xl">
+          {/* Iframe directo sin scripts de bloqueo */}
           <iframe 
             className="w-full h-full" 
-            src="https://www.youtube.com/embed/EQUdyb-YVxM?rel=0&modestbranding=1" 
-            title="Mensaje Alcaldesa" 
+            src="https://www.youtube.com/embed/EQUdyb-YVxM?rel=0&modestbranding=1&playsinline=1" 
+            title="Bienvenida Alcaldesa" 
             frameBorder="0" 
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
             allowFullScreen
           ></iframe>
         </div>
       }
-      content={<><p className="font-black text-5xl text-white mb-8 italic tracking-tighter">¡Hola, {userData.nombres}!</p><p>Te damos la bienvenida a la **Ilustre Municipalidad de La Serena**. Te sumas a una institución con más de 480 años de historia, pero con una visión de futuro moderna e innovadora.</p><div className="bg-red-600/20 p-8 rounded-3xl border-l-4 border-red-600 italic text-xl text-red-100">"Nuestra gestión pone al vecino en el centro. Buscamos funcionarios proactivos, empáticos y modernos."</div><p className="text-slate-400 text-sm mt-4">Dale play al video para ver el saludo oficial.</p></>} 
+      content={<><p className="font-black text-5xl text-white mb-8 italic tracking-tighter">¡Hola, {userData.nombres}!</p><p>Te damos la bienvenida a la **Ilustre Municipalidad de La Serena**. Te sumas a una institución con más de 480 años de historia, pero con una visión de futuro moderna e innovadora.</p><div className="bg-red-600/20 p-8 rounded-3xl border-l-4 border-red-600 italic text-xl text-red-100">"Nuestra gestión pone al vecino en el centro. Buscamos funcionarios proactivos, empáticos y modernos."</div><p className="text-slate-400 text-sm mt-4">Haz clic en el video para ver el saludo oficial.</p></>} 
     />;
 
     case 2: return <ChapterLayout title="Estrategia" subtitle="Misión y Visión" 
@@ -207,7 +228,7 @@ export default function App() {
 
     case 4: return <ChapterLayout title="Estructura" subtitle="Direcciones Municipales" 
       visual={<div className="flex items-center justify-center p-8"><img src="/img/organigrama_full.png" className="max-h-full object-contain drop-shadow-[0_0_50px_rgba(255,255,255,0.1)]" onError={(e) => e.currentTarget.src='https://placehold.co/600x800/111/fff?text=Organigrama'}/></div>}
-      content={<><p className="text-3xl font-black text-white italic border-l-4 border-red-600 pl-4 uppercase tracking-tighter mb-8">Red de Servicio:</p><div className="grid gap-4 mt-6">{DEPARTAMENTOS.slice(0, 6).map((d, i) => (<div key={i} className="p-6 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all"><h4 className="font-black text-white uppercase text-xl">{d}</h4></div>))}</div></>} 
+      content={<><p className="text-3xl font-black text-white italic border-l-4 border-red-600 pl-4 uppercase tracking-tighter mb-8">Red de Servicio:</p><div className="grid gap-4 mt-6">{DEPARTAMENTOS.map((d, i) => (<div key={i} className="p-5 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all"><h4 className="font-black text-white uppercase text-lg">{d.name}</h4><p className="text-slate-400 text-xs mt-1">{d.desc}</p></div>))}</div></>} 
     />;
 
     case 5: return <ChapterLayout title="Smart City" subtitle="Ecosistema Digital" 
@@ -233,12 +254,12 @@ export default function App() {
 
     case 8: return <ChapterLayout title="Ley Karin" subtitle="Respeto (21.643)" 
       visual={<div className="p-12 text-center"><Shield size={150} className="text-pink-600 mx-auto"/><h4 className="font-bold text-pink-100 mt-6 text-3xl uppercase">Ley 21.643</h4></div>}
-      content={<><p className="text-3xl font-black text-white mb-6 italic uppercase leading-none border-b border-white/10 pb-4">Tolerancia Cero.</p><p>La **Ley Karin** mandata la prevención y sanción del acoso laboral, sexual y la violencia. Protegemos tu integridad:</p><div className="grid gap-6 mt-8"><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><AlertTriangle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Acoso Laboral</h5><p className="text-xs text-slate-400">Agresión u hostigamiento contra la dignidad.</p></div></div><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><MessageCircle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Violencia</h5><p className="text-xs text-slate-400">Ejercida por terceros (usuarios/vecinos).</p></div></div></div></>} 
+      content={<><p className="text-3xl font-black text-white mb-6 italic uppercase leading-none border-b border-white/10 pb-4">Tolerancia Cero.</p><p>La **Ley Karin** mandata la prevención y sanción del acoso laboral, sexual y la violencia. Protegemos tu integridad:</p><div className="grid gap-6 mt-8"><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><AlertTriangle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Acoso Laboral</h5><p className="text-xs text-slate-400">Agresión u hostigamiento contra la dignidad.</p></div></div><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><MessageCircle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Violencia</h5><p className="text-xs text-slate-400">Ejercida por terceros (usuarios/vecinos).</p></div></div></div><p className="mt-8 text-xs bg-white/5 p-4 rounded-xl text-center italic">"Un solo acto grave es suficiente para denunciar."</p></>} 
     />;
 
     case 9: return <ChapterLayout title="Protección" subtitle="Mutualidad y Emergencias" 
       visual={<div className="p-12"><HardHat size={150} className="text-yellow-500 mx-auto animate-bounce"/></div>}
-      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual CChC</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><Radio size={30}/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
+      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad CChC</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><Radio size={30}/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
     />;
 
     case 10: return <ChapterLayout title="Educación" subtitle="Capacitación Continua" 
@@ -246,7 +267,6 @@ export default function App() {
       content={<><p className="text-3xl font-black text-white mb-6 uppercase italic">Capacitación Continua.</p><p className="font-light">Impulsamos tu crecimiento profesional:</p><div className="grid gap-6 mt-8"><div className="p-6 bg-white/5 rounded-3xl border border-white/10 flex items-center gap-6"><BookOpen className="text-red-500" size={40}/><div><h4 className="text-white font-black text-xl uppercase">Academia</h4><p className="text-slate-400 text-xs mt-1">Cursos certificados de gestión pública.</p></div></div><div className="p-6 bg-white/5 rounded-3xl border border-white/10 flex items-center gap-6"><Zap className="text-orange-500" size={40}/><div><h4 className="text-white font-black text-xl uppercase">Innovación</h4><p className="text-slate-400 text-xs mt-1">Talleres de soluciones digitales.</p></div></div></div></>} 
     />;
 
-    // 11. QUIZ
     case 11: return (
       <div className="h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-4">
         <div className="bg-slate-900 w-full max-w-4xl rounded-[3rem] border border-white/10 flex flex-col h-[80vh] shadow-2xl relative overflow-hidden">
@@ -282,20 +302,18 @@ export default function App() {
       </div>
     );
 
-    // 12. DIPLOMA (DISEÑO FIERO ARREGLADO)
     case 12: return (
       <div className="h-[100dvh] bg-slate-950 flex flex-col overflow-y-auto font-sans p-6">
          <div className="w-full max-w-5xl mx-auto space-y-10 py-10">
-            {/* DIPLOMA DE LUJO */}
+            {/* DIPLOMA CORREGIDO Y ELEGANTE */}
             <div className="bg-white p-10 lg:p-20 rounded-[1rem] shadow-2xl text-slate-900 relative overflow-hidden border-[20px] border-double border-[#C5A065] relative">
-               {/* Marca de agua */}
                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none">
                  <img src="/img/escudo.png" className="h-[500px]" />
                </div>
 
                <div className="flex justify-between items-center mb-12 border-b-2 border-[#C5A065]/30 pb-8 relative z-10">
-                  <img src="/img/escudo.png" className="h-20" />
-                  <img src="/img/innovacion.png" className="h-20" />
+                  <img src="/img/escudo.png" className="h-20" onError={(e)=>e.currentTarget.style.display='none'}/>
+                  <img src="/img/innovacion.png" className="h-20" onError={(e)=>e.currentTarget.style.display='none'}/>
                </div>
                
                <div className="text-center relative z-10">
