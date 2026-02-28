@@ -40,53 +40,19 @@ const CONCEJALES = [
   "Camilo Araya Plaza", "María Marcela Damke", "Matías Espinosa Morales", "Luisa Jinete Cárcamo"
 ];
 
-// --- COMPONENTES AUXILIARES ---
-
-// Reproductor de Video Seguro (Evita bloqueos de autoplay)
-const SafeVideoPlayer = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  if (isPlaying) {
-    return (
-      <div className="w-full h-full bg-black flex items-center justify-center rounded-3xl overflow-hidden shadow-2xl animate-in fade-in">
-        <iframe 
-          className="w-full h-full" 
-          src="https://www.youtube.com/embed/EQUdyb-YVxM?autoplay=1&rel=0" 
-          title="Mensaje Alcaldesa" 
-          frameBorder="0" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-          allowFullScreen
-        ></iframe>
-      </div>
-    );
-  }
-
-  return (
-    <div 
-      className="w-full h-full relative cursor-pointer group rounded-3xl overflow-hidden shadow-2xl bg-slate-900"
-      onClick={() => setIsPlaying(true)}
-    >
-      <img 
-        src="https://img.youtube.com/vi/EQUdyb-YVxM/maxresdefault.jpg" 
-        className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500"
-        alt="Portada"
-      />
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-          <Play size={40} fill="white" className="text-white ml-2" />
-        </div>
-        <p className="mt-4 text-white font-black text-xl tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-          Ver Mensaje Oficial
-        </p>
-      </div>
-    </div>
-  );
-};
-
 // --- APP PRINCIPAL ---
 export default function App() {
   const [step, setStep] = useState(0); 
-  const [userData, setUserData] = useState({ nombres: '', apellidos: '', rut: '', dept: '', cargo: '' });
+  
+  // ESTADO PRE-LLENADO (AUTOCOMPLETADO) PARA NO AGOBIAR
+  const [userData, setUserData] = useState({ 
+    nombres: 'Rodrigo', 
+    apellidos: 'Godoy', 
+    rut: '12.345.678-9', 
+    dept: 'Alcaldía', 
+    cargo: 'Director' 
+  });
+
   const [currentTime, setCurrentTime] = useState(new Date());
   
   // Quiz Logic
@@ -96,7 +62,7 @@ export default function App() {
   const [quizFinished, setQuizFinished] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const totalSteps = 12; // 0 a 11
+  const totalSteps = 12;
 
   // Reloj
   useEffect(() => {
@@ -104,16 +70,16 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Reset scroll
+  // Reset scroll al cambiar paso
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [step]);
 
-  // NAVEGACIÓN MANUAL (INDISPENSABLE)
+  // NAVEGACIÓN MANUAL (Botones siempre funcionan)
   const goNext = () => setStep(s => Math.min(s + 1, totalSteps - 1));
   const goBack = () => setStep(s => Math.max(0, s - 1));
 
-  // Quiz
+  // Quiz Handlers
   const handleAnswer = (optionIndex: number) => {
     if (quizState !== 'waiting') return;
     const isCorrect = optionIndex === QUESTIONS[quizIndex].ans;
@@ -132,31 +98,47 @@ export default function App() {
 
   const printCertificate = () => window.print();
 
-  // --- LAYOUT MAESTRO (DISEÑO PREMIUM PERO ESTABLE) ---
+  // --- COMPONENTE DE VIDEO NETFLIX (Carga solo al click) ---
+  const VideoPlayer = () => {
+    const [play, setPlay] = useState(false);
+    return play ? (
+      <div className="w-full h-full bg-black rounded-3xl overflow-hidden shadow-2xl animate-in fade-in">
+        <iframe className="w-full h-full" src="https://www.youtube.com/embed/EQUdyb-YVxM?autoplay=1&rel=0" title="Mensaje" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen></iframe>
+      </div>
+    ) : (
+      <div className="w-full h-full relative cursor-pointer group rounded-3xl overflow-hidden shadow-2xl" onClick={() => setPlay(true)}>
+        <img src="https://img.youtube.com/vi/EQUdyb-YVxM/maxresdefault.jpg" className="w-full h-full object-cover brightness-75 group-hover:brightness-50 transition-all"/>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"><Play size={40} fill="white" className="text-white ml-2"/></div>
+          <p className="mt-4 text-white font-black uppercase tracking-widest text-lg drop-shadow-md">Ver Mensaje</p>
+        </div>
+      </div>
+    );
+  };
+
+  // --- LAYOUT MAESTRO (Diseño Glow) ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="h-screen w-full flex flex-col lg:flex-row bg-slate-50 text-slate-900 overflow-hidden font-sans relative">
       
-      {/* Fondo Decorativo Estático (Evita crasheos de animaciones) */}
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-slate-50 via-white to-slate-100"></div>
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-500/5 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+      {/* Fondo Glow Estático */}
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-slate-50 to-slate-200"></div>
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Barra Progreso */}
       <div className="fixed top-0 w-full h-2 bg-slate-200 z-50">
         <div className="h-full bg-gradient-to-r from-red-600 to-orange-600 transition-all duration-300" style={{ width: `${((step + 1) / totalSteps) * 100}%` }}></div>
       </div>
       
-      {/* VISUAL (Izquierda PC / Arriba Móvil) */}
-      <div className="lg:w-1/2 w-full lg:h-full h-[40vh] p-4 lg:p-12 flex items-center justify-center relative z-10">
+      {/* VISUAL */}
+      <div className="lg:w-1/2 w-full lg:h-full h-[35vh] p-4 lg:p-12 flex items-center justify-center relative z-10 bg-slate-100/50">
          <div className="w-full h-full relative">
            {visual}
          </div>
       </div>
 
-      {/* CONTENIDO (Derecha PC / Abajo Móvil) */}
-      <div className="lg:w-1/2 w-full flex flex-col h-[60vh] lg:h-full relative z-20 bg-white/80 backdrop-blur-xl border-l border-white/50 shadow-2xl">
-        
-        {/* Header */}
+      {/* CONTENIDO */}
+      <div className="lg:w-1/2 w-full flex flex-col h-[65vh] lg:h-full relative z-20 bg-white/80 backdrop-blur-xl border-l border-white/50 shadow-2xl">
         <div className="px-8 lg:px-16 pt-8 pb-4 shrink-0 border-b border-slate-100">
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Paso {step}</span>
@@ -166,20 +148,17 @@ export default function App() {
           <h3 className="text-lg lg:text-xl text-slate-500 font-serif italic">{subtitle}</h3>
         </div>
         
-        {/* Contenido Scrollable */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8 lg:px-16 py-6 scroll-smooth">
           <div className="space-y-6 text-lg text-slate-700 leading-relaxed font-light">
             {content}
-            <div className="h-24"></div> {/* Espacio para el footer */}
+            <div className="h-24"></div>
           </div>
         </div>
 
-        {/* Footer de Navegación Fijo */}
         <div className="px-8 lg:px-16 py-4 border-t border-slate-200 bg-white flex items-center justify-between shrink-0 z-30">
            <button onClick={goBack} className="text-slate-500 hover:text-slate-900 font-bold text-xs uppercase flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-slate-100 transition-colors">
              <ChevronLeft size={16}/> Atrás
            </button>
-
            <button onClick={goNext} className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold shadow-xl hover:bg-red-600 transition-all flex items-center gap-2 text-sm uppercase tracking-wide transform hover:-translate-y-1">
              Siguiente <ArrowRight size={18} />
            </button>
@@ -190,7 +169,7 @@ export default function App() {
 
   // --- PANTALLAS ---
 
-  // 0. LOGIN
+  // 0. LOGIN (AUTOCOMPLETADO)
   if (step === 0) return (
     <div className="h-screen w-full flex items-center justify-center bg-slate-900 relative overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -198,29 +177,28 @@ export default function App() {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
       </div>
       
-      <div className="relative z-10 w-full max-w-6xl h-full flex flex-col md:flex-row items-center justify-center p-8 gap-12">
+      <div className="relative z-10 w-full max-w-5xl h-full flex flex-col md:flex-row items-center justify-center p-8 gap-12">
         <div className="text-center md:text-left space-y-4 flex-1">
           <img src="/img/escudo.png" onError={(e) => e.currentTarget.style.display='none'} className="h-24 mx-auto md:mx-0 drop-shadow-2xl" alt="Escudo" />
           <h1 className="text-5xl md:text-7xl font-black text-white leading-none tracking-tighter">INDUCCIÓN<br/><span className="text-red-500">MUNICIPAL</span></h1>
           <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-sm">Ilustre Municipalidad de La Serena</p>
         </div>
         
-        <div className="w-full max-w-md bg-white/10 backdrop-blur-md p-8 rounded-[2rem] border border-white/20 shadow-2xl flex-1">
+        <div className="w-full max-w-md bg-white/10 backdrop-blur-md p-8 rounded-[2rem] border border-white/20 shadow-2xl flex-1 animate-in slide-in-from-right-10 duration-700">
           <div className="space-y-4">
             <h3 className="text-white font-bold text-xl mb-4 flex items-center gap-2"><User className="text-red-500"/> Registro Funcionario</h3>
             <div className="grid grid-cols-2 gap-3">
-               <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Nombres" onChange={e => setUserData({...userData, nombres: e.target.value})} />
-               <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Apellidos" onChange={e => setUserData({...userData, apellidos: e.target.value})} />
+               <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm" value={userData.nombres} onChange={e => setUserData({...userData, nombres: e.target.value})} />
+               <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm" value={userData.apellidos} onChange={e => setUserData({...userData, apellidos: e.target.value})} />
             </div>
-            <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="RUT" onChange={e => setUserData({...userData, rut: e.target.value})} />
-            <select className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm" onChange={e => setUserData({...userData, dept: e.target.value})}>
-                <option value="">Selecciona Unidad...</option>
+            <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm" value={userData.rut} onChange={e => setUserData({...userData, rut: e.target.value})} />
+            <select className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm" value={userData.dept} onChange={e => setUserData({...userData, dept: e.target.value})}>
                 {DEPARTAMENTOS.map((d, i) => <option key={i} value={d} className="text-black">{d}</option>)}
             </select>
-            <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Cargo" onChange={e => setUserData({...userData, cargo: e.target.value})} />
+            <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm" value={userData.cargo} onChange={e => setUserData({...userData, cargo: e.target.value})} />
             
-            <button disabled={!userData.nombres} onClick={goNext} className="w-full bg-red-600 text-white p-4 rounded-xl font-black tracking-wide hover:bg-red-700 transition-all shadow-lg flex justify-center gap-2 mt-4 items-center disabled:opacity-50">
-              INICIAR <ArrowRight size={20}/>
+            <button onClick={goNext} className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white p-4 rounded-xl font-black tracking-wide hover:shadow-lg hover:shadow-red-900/50 flex justify-center gap-3 mt-6 items-center transition-all hover:scale-[1.02]">
+              INGRESAR AHORA <ArrowRight size={20}/>
             </button>
           </div>
         </div>
@@ -230,11 +208,11 @@ export default function App() {
 
   switch (step) {
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Mensaje de la Alcaldesa" 
-      visual={<SafeVideoPlayer />} // VIDEO SEGURO
+      visual={<VideoPlayer />}
       content={
         <div className="animate-in fade-in duration-700">
            <p className="font-black text-4xl text-slate-900 mb-6">¡Hola, {userData.nombres}!</p>
-           <p className="mb-8 text-xl font-light text-slate-600">Te sumas a una institución con historia. La Serena es una capital patrimonial que exige lo mejor de nosotros.</p>
+           <p className="mb-8 text-xl font-light text-slate-600">Te sumas a una institución con historia. La Serena no es solo la segunda ciudad más antigua de Chile; es una capital patrimonial que exige lo mejor de nosotros.</p>
            <div className="bg-red-50 p-8 rounded-[2rem] border-l-8 border-red-600 mb-10 shadow-sm">
              <Quote className="text-red-400 mb-4" size={40}/>
              <p className="text-2xl font-serif italic text-red-900 leading-relaxed">"Nuestro compromiso es modernizar la gestión municipal. Queremos funcionarios proactivos, empáticos y que entiendan que detrás de cada papel hay una familia."</p>
@@ -249,12 +227,12 @@ export default function App() {
         <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white p-8 rounded-3xl">
            <div className="space-y-6 w-full max-w-sm">
               <div className="bg-white/10 p-6 rounded-2xl border border-white/10 backdrop-blur-md">
-                 <h4 className="font-black text-2xl text-yellow-400 mb-2">MISIÓN</h4>
-                 <p className="text-slate-200">Mejorar la calidad de vida con gestión participativa.</p>
+                 <h4 className="font-black text-3xl text-yellow-400 mb-2">MISIÓN</h4>
+                 <p className="text-slate-200 text-lg">Mejorar la calidad de vida con gestión participativa.</p>
               </div>
               <div className="bg-white/10 p-6 rounded-2xl border border-white/10 backdrop-blur-md">
-                 <h4 className="font-black text-2xl text-red-400 mb-2">VISIÓN</h4>
-                 <p className="text-slate-200">Líderes en desarrollo sostenible y patrimonio.</p>
+                 <h4 className="font-black text-3xl text-red-400 mb-2">VISIÓN</h4>
+                 <p className="text-slate-200 text-lg">Líderes en desarrollo sostenible y patrimonio.</p>
               </div>
            </div>
         </div>
@@ -265,15 +243,15 @@ export default function App() {
           <div className="space-y-4">
              <div className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 font-black text-xl shrink-0">1</div>
-               <div><h4 className="font-bold text-slate-900">Probidad</h4><p className="text-slate-600">Rectitud intachable.</p></div>
+               <div><h4 className="font-black text-slate-900 text-xl">Probidad</h4><p className="text-slate-600">Rectitud intachable.</p></div>
              </div>
              <div className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 font-black text-xl shrink-0">2</div>
-               <div><h4 className="font-bold text-slate-900">Cercanía</h4><p className="text-slate-600">Empatía total.</p></div>
+               <div><h4 className="font-black text-slate-900 text-xl">Cercanía</h4><p className="text-slate-600">Empatía total.</p></div>
              </div>
              <div className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 font-black text-xl shrink-0">3</div>
-               <div><h4 className="font-bold text-slate-900">Transparencia</h4><p className="text-slate-600">Actos públicos.</p></div>
+               <div><h4 className="font-black text-slate-900 text-xl">Transparencia</h4><p className="text-slate-600">Actos públicos.</p></div>
              </div>
           </div>
         </>
@@ -319,7 +297,7 @@ export default function App() {
           <div className="space-y-4">
              <div className="p-5 bg-white shadow-sm rounded-2xl border border-slate-100 hover:border-red-200 transition-colors flex gap-4">
                <div className="bg-red-100 p-3 rounded-xl text-red-600 h-fit"><Heart/></div>
-               <div><h4 className="font-bold text-slate-900 text-lg">DIDECO</h4><p className="text-slate-500">Corazón social. Ayudas y organizaciones.</p></div>
+               <div><h4 className="font-bold text-slate-900 text-lg">DIDECO</h4><p className="text-slate-500">Corazón social. Gestiona ayudas y organizaciones.</p></div>
              </div>
              <div className="p-5 bg-white shadow-sm rounded-2xl border border-slate-100 hover:border-blue-200 transition-colors flex gap-4">
                <div className="bg-blue-100 p-3 rounded-xl text-blue-600 h-fit"><Building2/></div>
@@ -337,7 +315,6 @@ export default function App() {
     case 5: return <ChapterLayout title="Mapa de Públicos" subtitle="Ecosistema" 
       visual={
         <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-white rounded-3xl p-6 relative overflow-hidden">
-           <div className="absolute w-[500px] h-[500px] bg-slate-800 rounded-full blur-3xl opacity-50"></div>
            <div className="bg-white text-slate-900 font-black p-6 rounded-full mb-8 text-2xl shadow-[0_0_30px_white] relative z-10">IMLS</div>
            <div className="grid grid-cols-2 gap-4 text-center text-sm w-full relative z-10">
              <div className="bg-blue-600/30 border border-blue-500/50 p-4 rounded-2xl backdrop-blur-sm"><User className="mx-auto mb-2 text-blue-400"/>Vecinos</div>
@@ -430,7 +407,6 @@ export default function App() {
     case 9: return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl w-full max-w-2xl relative overflow-hidden">
-           {/* Barra Progreso Quiz */}
            <div className="absolute top-0 left-0 w-full h-2 bg-slate-100"><div className="h-full bg-green-500 transition-all" style={{width: `${((quizIndex+1)/QUESTIONS.length)*100}%`}}></div></div>
            
            {!quizFinished ? (
