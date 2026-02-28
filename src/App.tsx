@@ -4,7 +4,7 @@ import {
   ChevronDown, Shield, Heart, DollarSign, 
   Printer, RefreshCw, User, Map, Briefcase, 
   Building2, Lightbulb, Clock, QrCode, Smartphone, 
-  ArrowRight, Play, Star, Radio, MessageCircle
+  ArrowRight, Play, Radio, MessageCircle, Zap
 } from 'lucide-react';
 
 // --- DATOS ---
@@ -40,17 +40,35 @@ const CONCEJALES = [
   "Camilo Araya Plaza", "María Marcela Damke", "Matías Espinosa Morales", "Luisa Jinete Cárcamo"
 ];
 
+// --- VIDEO PLAYER SEGURO ---
+const VideoPlayer = () => {
+  const [play, setPlay] = useState(false);
+  return play ? (
+    <div className="w-full h-full bg-black rounded-3xl overflow-hidden shadow-2xl animate-in fade-in">
+      <iframe className="w-full h-full" src="https://www.youtube.com/embed/EQUdyb-YVxM?autoplay=1&rel=0" title="Mensaje" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen></iframe>
+    </div>
+  ) : (
+    <div className="w-full h-full relative cursor-pointer group rounded-3xl overflow-hidden shadow-2xl bg-slate-900" onClick={() => setPlay(true)}>
+      <img src="https://img.youtube.com/vi/EQUdyb-YVxM/maxresdefault.jpg" className="w-full h-full object-cover opacity-70 group-hover:opacity-50 transition-all"/>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+        <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"><Play size={40} fill="white" className="ml-2"/></div>
+        <p className="mt-4 font-black uppercase tracking-widest text-lg drop-shadow-md">Ver Mensaje</p>
+      </div>
+    </div>
+  );
+};
+
 // --- APP PRINCIPAL ---
 export default function App() {
   const [step, setStep] = useState(0); 
   
-  // ESTADO PRE-LLENADO (AUTOCOMPLETADO) PARA NO AGOBIAR
+  // 1. ESTADO INICIAL VACÍO (Como pediste)
   const [userData, setUserData] = useState({ 
-    nombres: 'Rodrigo', 
-    apellidos: 'Godoy', 
-    rut: '12.345.678-9', 
-    dept: 'Alcaldía', 
-    cargo: 'Director' 
+    nombres: '', 
+    apellidos: '', 
+    rut: '', 
+    dept: '', 
+    cargo: '' 
   });
 
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -62,7 +80,7 @@ export default function App() {
   const [quizFinished, setQuizFinished] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const totalSteps = 12;
+  const totalSteps = 12; // 0 a 11
 
   // Reloj
   useEffect(() => {
@@ -75,7 +93,18 @@ export default function App() {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [step]);
 
-  // NAVEGACIÓN MANUAL (Botones siempre funcionan)
+  // 2. FUNCIÓN "MODO DEMO" (Llenado rápido)
+  const fillDemoData = () => {
+    setUserData({
+      nombres: 'Rodrigo',
+      apellidos: 'Godoy',
+      rut: '12.345.678-9',
+      dept: 'Alcaldía',
+      cargo: 'Director'
+    });
+  };
+
+  // NAVEGACIÓN MANUAL (SEGURA)
   const goNext = () => setStep(s => Math.min(s + 1, totalSteps - 1));
   const goBack = () => setStep(s => Math.max(0, s - 1));
 
@@ -98,32 +127,12 @@ export default function App() {
 
   const printCertificate = () => window.print();
 
-  // --- COMPONENTE DE VIDEO NETFLIX (Carga solo al click) ---
-  const VideoPlayer = () => {
-    const [play, setPlay] = useState(false);
-    return play ? (
-      <div className="w-full h-full bg-black rounded-3xl overflow-hidden shadow-2xl animate-in fade-in">
-        <iframe className="w-full h-full" src="https://www.youtube.com/embed/EQUdyb-YVxM?autoplay=1&rel=0" title="Mensaje" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen></iframe>
-      </div>
-    ) : (
-      <div className="w-full h-full relative cursor-pointer group rounded-3xl overflow-hidden shadow-2xl" onClick={() => setPlay(true)}>
-        <img src="https://img.youtube.com/vi/EQUdyb-YVxM/maxresdefault.jpg" className="w-full h-full object-cover brightness-75 group-hover:brightness-50 transition-all"/>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"><Play size={40} fill="white" className="text-white ml-2"/></div>
-          <p className="mt-4 text-white font-black uppercase tracking-widest text-lg drop-shadow-md">Ver Mensaje</p>
-        </div>
-      </div>
-    );
-  };
-
-  // --- LAYOUT MAESTRO (Diseño Glow) ---
+  // --- LAYOUT MAESTRO ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="h-screen w-full flex flex-col lg:flex-row bg-slate-50 text-slate-900 overflow-hidden font-sans relative">
       
-      {/* Fondo Glow Estático */}
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-slate-50 to-slate-200"></div>
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      {/* Fondo Degradado Estático (Sin Blur pesado) */}
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white via-slate-50 to-slate-100"></div>
 
       {/* Barra Progreso */}
       <div className="fixed top-0 w-full h-2 bg-slate-200 z-50">
@@ -131,14 +140,12 @@ export default function App() {
       </div>
       
       {/* VISUAL */}
-      <div className="lg:w-1/2 w-full lg:h-full h-[35vh] p-4 lg:p-12 flex items-center justify-center relative z-10 bg-slate-100/50">
-         <div className="w-full h-full relative">
-           {visual}
-         </div>
+      <div className="lg:w-1/2 w-full lg:h-full h-[35vh] p-4 lg:p-12 flex items-center justify-center relative z-10 bg-slate-100/50 border-b lg:border-b-0 lg:border-r border-slate-200">
+         <div className="w-full h-full relative">{visual}</div>
       </div>
 
       {/* CONTENIDO */}
-      <div className="lg:w-1/2 w-full flex flex-col h-[65vh] lg:h-full relative z-20 bg-white/80 backdrop-blur-xl border-l border-white/50 shadow-2xl">
+      <div className="lg:w-1/2 w-full flex flex-col h-[65vh] lg:h-full relative z-20 bg-white/90 backdrop-blur-sm shadow-xl">
         <div className="px-8 lg:px-16 pt-8 pb-4 shrink-0 border-b border-slate-100">
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Paso {step}</span>
@@ -169,7 +176,7 @@ export default function App() {
 
   // --- PANTALLAS ---
 
-  // 0. LOGIN (AUTOCOMPLETADO)
+  // 0. LOGIN
   if (step === 0) return (
     <div className="h-screen w-full flex items-center justify-center bg-slate-900 relative overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -184,21 +191,28 @@ export default function App() {
           <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-sm">Ilustre Municipalidad de La Serena</p>
         </div>
         
-        <div className="w-full max-w-md bg-white/10 backdrop-blur-md p-8 rounded-[2rem] border border-white/20 shadow-2xl flex-1 animate-in slide-in-from-right-10 duration-700">
+        <div className="w-full max-w-md bg-white/10 backdrop-blur-md p-8 rounded-[2rem] border border-white/20 shadow-2xl flex-1 animate-in slide-in-from-right-10 duration-700 relative">
+          
+          {/* BOTÓN DEMO PARA PRUEBAS RÁPIDAS */}
+          <button onClick={fillDemoData} className="absolute top-4 right-4 text-white/40 hover:text-white flex items-center gap-1 text-[10px] uppercase font-bold transition-colors">
+            <Zap size={14}/> Llenar Prueba
+          </button>
+
           <div className="space-y-4">
             <h3 className="text-white font-bold text-xl mb-4 flex items-center gap-2"><User className="text-red-500"/> Registro Funcionario</h3>
             <div className="grid grid-cols-2 gap-3">
-               <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm" value={userData.nombres} onChange={e => setUserData({...userData, nombres: e.target.value})} />
-               <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm" value={userData.apellidos} onChange={e => setUserData({...userData, apellidos: e.target.value})} />
+               <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Nombres" value={userData.nombres} onChange={e => setUserData({...userData, nombres: e.target.value})} />
+               <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Apellidos" value={userData.apellidos} onChange={e => setUserData({...userData, apellidos: e.target.value})} />
             </div>
-            <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm" value={userData.rut} onChange={e => setUserData({...userData, rut: e.target.value})} />
+            <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="RUT" value={userData.rut} onChange={e => setUserData({...userData, rut: e.target.value})} />
             <select className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm" value={userData.dept} onChange={e => setUserData({...userData, dept: e.target.value})}>
+                <option value="">Selecciona Unidad...</option>
                 {DEPARTAMENTOS.map((d, i) => <option key={i} value={d} className="text-black">{d}</option>)}
             </select>
-            <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm" value={userData.cargo} onChange={e => setUserData({...userData, cargo: e.target.value})} />
+            <input className="w-full p-3 rounded-xl bg-slate-800/60 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Cargo" value={userData.cargo} onChange={e => setUserData({...userData, cargo: e.target.value})} />
             
-            <button onClick={goNext} className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white p-4 rounded-xl font-black tracking-wide hover:shadow-lg hover:shadow-red-900/50 flex justify-center gap-3 mt-6 items-center transition-all hover:scale-[1.02]">
-              INGRESAR AHORA <ArrowRight size={20}/>
+            <button disabled={!userData.nombres} onClick={goNext} className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white p-4 rounded-xl font-black tracking-wide hover:shadow-lg hover:shadow-red-900/50 flex justify-center gap-3 mt-6 items-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02]">
+              INGRESAR <ArrowRight size={20}/>
             </button>
           </div>
         </div>
@@ -214,7 +228,6 @@ export default function App() {
            <p className="font-black text-4xl text-slate-900 mb-6">¡Hola, {userData.nombres}!</p>
            <p className="mb-8 text-xl font-light text-slate-600">Te sumas a una institución con historia. La Serena no es solo la segunda ciudad más antigua de Chile; es una capital patrimonial que exige lo mejor de nosotros.</p>
            <div className="bg-red-50 p-8 rounded-[2rem] border-l-8 border-red-600 mb-10 shadow-sm">
-             <Quote className="text-red-400 mb-4" size={40}/>
              <p className="text-2xl font-serif italic text-red-900 leading-relaxed">"Nuestro compromiso es modernizar la gestión municipal. Queremos funcionarios proactivos, empáticos y que entiendan que detrás de cada papel hay una familia."</p>
              <p className="text-right font-bold text-red-700 mt-4 text-sm uppercase">- Daniela Norambuena, Alcaldesa</p>
            </div>
@@ -226,11 +239,11 @@ export default function App() {
       visual={
         <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white p-8 rounded-3xl">
            <div className="space-y-6 w-full max-w-sm">
-              <div className="bg-white/10 p-6 rounded-2xl border border-white/10 backdrop-blur-md">
+              <div className="bg-white/10 p-6 rounded-2xl border border-white/10">
                  <h4 className="font-black text-3xl text-yellow-400 mb-2">MISIÓN</h4>
                  <p className="text-slate-200 text-lg">Mejorar la calidad de vida con gestión participativa.</p>
               </div>
-              <div className="bg-white/10 p-6 rounded-2xl border border-white/10 backdrop-blur-md">
+              <div className="bg-white/10 p-6 rounded-2xl border border-white/10">
                  <h4 className="font-black text-3xl text-red-400 mb-2">VISIÓN</h4>
                  <p className="text-slate-200 text-lg">Líderes en desarrollo sostenible y patrimonio.</p>
               </div>
@@ -243,15 +256,15 @@ export default function App() {
           <div className="space-y-4">
              <div className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 font-black text-xl shrink-0">1</div>
-               <div><h4 className="font-black text-slate-900 text-xl">Probidad</h4><p className="text-slate-600">Rectitud intachable.</p></div>
+               <div><h4 className="font-bold text-slate-900 text-xl">Probidad</h4><p className="text-slate-600">Rectitud intachable.</p></div>
              </div>
              <div className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 font-black text-xl shrink-0">2</div>
-               <div><h4 className="font-black text-slate-900 text-xl">Cercanía</h4><p className="text-slate-600">Empatía total.</p></div>
+               <div><h4 className="font-bold text-slate-900 text-xl">Cercanía</h4><p className="text-slate-600">Empatía total.</p></div>
              </div>
              <div className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 font-black text-xl shrink-0">3</div>
-               <div><h4 className="font-black text-slate-900 text-xl">Transparencia</h4><p className="text-slate-600">Actos públicos.</p></div>
+               <div><h4 className="font-bold text-slate-900 text-xl">Transparencia</h4><p className="text-slate-600">Actos públicos.</p></div>
              </div>
           </div>
         </>
@@ -391,11 +404,9 @@ export default function App() {
              <div>
                <h4 className="font-black text-2xl mb-4 flex items-center gap-2 text-slate-900"><AlertCircle className="text-red-500"/> Accidentes</h4>
                <div className="bg-red-50 p-6 rounded-3xl text-red-900 font-bold text-lg border border-red-100">
-                 <ol className="list-decimal ml-6 space-y-2">
-                   <li>AVISAR A JEFATURA.</li>
-                   <li>IR A LA ACHS.</li>
-                   <li>REGISTRO OBLIGATORIO.</li>
-                 </ol>
+                 1. AVISAR A JEFATURA.<br/>
+                 2. IR A LA ACHS.<br/>
+                 3. REGISTRO OBLIGATORIO.
                </div>
              </div>
           </div>
@@ -407,6 +418,7 @@ export default function App() {
     case 9: return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl w-full max-w-2xl relative overflow-hidden">
+           {/* Barra Progreso Quiz */}
            <div className="absolute top-0 left-0 w-full h-2 bg-slate-100"><div className="h-full bg-green-500 transition-all" style={{width: `${((quizIndex+1)/QUESTIONS.length)*100}%`}}></div></div>
            
            {!quizFinished ? (
@@ -521,6 +533,7 @@ export default function App() {
               <RefreshCw size={14}/> Cerrar Sesión Segura
             </button>
          </div>
+         <div className="absolute bottom-6 text-slate-600 text-xs font-bold uppercase tracking-widest">IMLS Inducción 2026 • Innovación Digital</div>
       </div>
     );
 
