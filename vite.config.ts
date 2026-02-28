@@ -6,6 +6,11 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
+    // --- ESTA ES LA LÍNEA NUEVA QUE ARREGLA LA PANTALLA BLANCA ---
+    // (Asegúrate de que 'portal-induccion-imls' sea el nombre exacto de tu repositorio)
+    base: "/portal-induccion-imls/", 
+    // -------------------------------------------------------------
+
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
@@ -16,8 +21,7 @@ export default defineConfig(({mode}) => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      // Configuración original de AI Studio (se mantiene igual)
       hmr: process.env.DISABLE_HMR !== 'true',
     },
   };
