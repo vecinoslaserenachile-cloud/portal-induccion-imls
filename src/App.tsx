@@ -4,8 +4,55 @@ import {
   ChevronDown, Shield, Heart, DollarSign, 
   Printer, RefreshCw, User, Map, Briefcase, 
   Building2, Lightbulb, Clock, QrCode, Smartphone, 
-  ArrowRight, AlertCircle, Quote
+  ArrowRight, AlertCircle, Quote, Play
 } from 'lucide-react';
+
+// --- COMPONENTE DE VIDEO INTELIGENTE ("NETFLIX STYLE") ---
+const SmartVideoPlayer = ({ videoId }: { videoId: string }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  if (isPlaying) {
+    return (
+      <div className="w-full h-full bg-black rounded-[2rem] overflow-hidden shadow-2xl animate-in fade-in duration-500">
+        <iframe 
+          className="w-full h-full" 
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&showinfo=0`} 
+          title="Mensaje Alcaldesa" 
+          frameBorder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowFullScreen
+        ></iframe>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full relative group cursor-pointer" onClick={() => setIsPlaying(true)}>
+      {/* Portada del Video (Thumbnail de Alta Calidad) */}
+      <img 
+        src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`} 
+        className="w-full h-full object-cover rounded-[2rem] shadow-2xl brightness-75 group-hover:brightness-50 transition-all duration-500"
+        alt="Portada Video"
+      />
+      
+      {/* Botón Play Gigante */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+        <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(220,38,38,0.6)] group-hover:scale-110 transition-transform duration-300">
+          <Play size={40} fill="white" className="ml-2"/>
+        </div>
+        <p className="mt-4 font-black text-xl tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity translate-y-4 group-hover:translate-y-0 duration-300">
+          Ver Mensaje Oficial
+        </p>
+      </div>
+
+      {/* Etiqueta Inferior */}
+      <div className="absolute bottom-8 left-8 bg-black/40 backdrop-blur-md px-6 py-3 rounded-xl border border-white/20">
+        <p className="text-white font-bold text-lg">Alcaldesa Daniela Norambuena</p>
+        <p className="text-slate-300 text-sm">Bienvenida IMLS 2026</p>
+      </div>
+    </div>
+  );
+};
 
 // --- BASE DE DATOS ---
 const DEPARTAMENTOS = [
@@ -56,27 +103,22 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // SCROLL LOGIC (Más estricta para forzar lectura)
+  // SCROLL LOGIC (Ajustada para textos largos)
   const checkProgress = () => {
     const el = scrollRef.current;
     if (el) {
-      // Usuario debe llegar casi al final (margen 20px)
-      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 20;
-      // Si el contenido es MUY corto (raro con el nuevo diseño), permitir.
+      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
       const isShort = el.scrollHeight <= el.clientHeight;
-      
       if (isAtBottom || isShort) setCanAdvance(true);
     }
   };
 
   useEffect(() => {
-    // Pasos que NO requieren scroll
     if ([0, 1, 9, 10, 11].includes(step)) {
       setCanAdvance(true);
     } else {
       setCanAdvance(false);
-      // Pequeño delay para asegurar que el contenido cargó antes de medir
-      setTimeout(checkProgress, 500);
+      setTimeout(checkProgress, 800);
     }
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [step]);
@@ -114,23 +156,22 @@ export default function App() {
       
       {/* VISUAL (Desktop: Izquierda / Móvil: Arriba) */}
       <div className="lg:order-2 hidden lg:flex w-1/2 h-full items-center justify-center relative p-12 bg-slate-100 border-l border-slate-200">
-        <div className="w-full h-full max-h-[800px] rounded-[2rem] overflow-hidden shadow-2xl bg-white ring-1 ring-black/5 relative transform hover:scale-[1.01] transition-transform duration-500">
+        <div className="w-full h-full max-h-[800px] relative z-10">
            {visual}
         </div>
       </div>
 
-      <div className="lg:hidden w-full h-[30vh] bg-slate-100 relative shrink-0 shadow-lg z-20 border-b border-slate-200">
+      <div className="lg:hidden w-full h-[35vh] bg-slate-100 relative shrink-0 shadow-lg z-20 border-b border-slate-200">
          {visual}
       </div>
 
       {/* CONTENIDO (Desktop: Derecha / Móvil: Abajo) */}
-      <div className="lg:order-1 w-full lg:w-1/2 flex flex-col h-[70vh] lg:h-full relative z-20 bg-white">
+      <div className="lg:order-1 w-full lg:w-1/2 flex flex-col h-[65vh] lg:h-full relative z-20 bg-white">
         
-        {/* HEADER DEL CAPÍTULO (Fijo) */}
+        {/* HEADER */}
         <div className="px-8 lg:px-16 pt-10 pb-6 shrink-0 bg-white border-b border-slate-50">
           <div className="flex items-center gap-3 mb-4">
             <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-red-200 shadow-lg">Módulo {step}</span>
-            <span className="text-slate-300 text-[10px] font-black uppercase tracking-widest">|</span>
             <span className="text-slate-400 text-[10px] font-bold tracking-widest uppercase">Inducción 2026</span>
           </div>
           <h2 className="text-4xl lg:text-6xl font-black text-slate-900 leading-[0.9] tracking-tighter mb-3">{title}</h2>
@@ -138,20 +179,20 @@ export default function App() {
           <h3 className="text-lg lg:text-2xl text-slate-500 font-medium font-serif italic">{subtitle}</h3>
         </div>
         
-        {/* TEXTO (Scrollable) */}
+        {/* TEXTO (TIPOGRAFÍA MEJORADA) */}
         <div ref={scrollRef} onScroll={checkProgress} className="flex-1 overflow-y-auto px-8 lg:px-16 py-8">
-          <div className="space-y-8 text-lg lg:text-xl text-slate-600 leading-relaxed font-light">
+          <div className="space-y-8 text-xl lg:text-2xl text-slate-600 leading-relaxed font-light">
             {content}
             
-            {/* Espaciador gigante para forzar scroll */}
-            <div className="py-12 flex flex-col items-center justify-center opacity-40 gap-2">
-              <div className="h-12 w-[1px] bg-slate-300"></div>
+            {/* Espaciador para forzar scroll */}
+            <div className="py-16 flex flex-col items-center justify-center opacity-40 gap-2">
+              <div className="h-16 w-[2px] bg-slate-300"></div>
               <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Fin de la lectura</span>
             </div>
           </div>
         </div>
 
-        {/* BOTONERA (Fija Abajo) */}
+        {/* BOTONERA */}
         <div className="px-8 lg:px-16 py-6 border-t border-slate-100 bg-white/90 backdrop-blur flex items-center justify-between shrink-0 mb-safe z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
            
            <button 
@@ -205,33 +246,21 @@ export default function App() {
             <h3 className="text-white font-bold text-2xl mb-8 flex items-center gap-3"><User className="text-red-500"/> Registro Funcionario</h3>
             
             <div className="grid grid-cols-2 gap-4">
-               <div className="space-y-1">
-                 <label className="text-[10px] text-slate-400 font-bold uppercase ml-2">Nombres</label>
-                 <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700 font-bold text-white text-sm focus:border-red-500 outline-none transition-colors" placeholder="Ej: Rodrigo" onChange={e => setUserData({...userData, nombres: e.target.value})} />
-               </div>
-               <div className="space-y-1">
-                 <label className="text-[10px] text-slate-400 font-bold uppercase ml-2">Apellidos</label>
-                 <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700 font-bold text-white text-sm focus:border-red-500 outline-none transition-colors" placeholder="Ej: Godoy" onChange={e => setUserData({...userData, apellidos: e.target.value})} />
-               </div>
+               <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Nombres" onChange={e => setUserData({...userData, nombres: e.target.value})} />
+               <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Apellidos" onChange={e => setUserData({...userData, apellidos: e.target.value})} />
             </div>
             
-            <div className="space-y-1">
-               <label className="text-[10px] text-slate-400 font-bold uppercase ml-2">RUT</label>
-               <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700 font-bold text-white text-sm focus:border-red-500 outline-none transition-colors" placeholder="12.345.678-9" onChange={e => setUserData({...userData, rut: e.target.value})} />
-            </div>
+            <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="RUT (12.345.678-9)" onChange={e => setUserData({...userData, rut: e.target.value})} />
 
-            <div className="space-y-1">
-              <label className="text-[10px] text-slate-400 font-bold uppercase ml-2">Unidad</label>
-              <div className="relative">
-                <select className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700 font-bold text-white text-sm appearance-none focus:border-red-500 outline-none transition-colors cursor-pointer" onChange={e => setUserData({...userData, dept: e.target.value})}>
-                  <option value="">Selecciona Departamento...</option>
-                  {DEPARTAMENTOS.map((d, i) => <option key={i} value={d} className="text-slate-900">{d}</option>)}
-                </select>
-                <ChevronDown className="absolute right-4 top-4 text-slate-500 pointer-events-none" size={16}/>
-              </div>
+            <div className="relative">
+              <select className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700 font-bold text-white text-sm appearance-none focus:border-red-500 outline-none cursor-pointer" onChange={e => setUserData({...userData, dept: e.target.value})}>
+                <option value="">Selecciona Unidad...</option>
+                {DEPARTAMENTOS.map((d, i) => <option key={i} value={d} className="text-slate-900">{d}</option>)}
+              </select>
+              <ChevronDown className="absolute right-4 top-4 text-slate-500 pointer-events-none" size={16}/>
             </div>
             
-            <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700 font-bold text-white text-sm focus:border-red-500 outline-none transition-colors" placeholder="Cargo (Ej: Administrativo)" onChange={e => setUserData({...userData, cargo: e.target.value})} />
+            <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Cargo (Ej: Administrativo)" onChange={e => setUserData({...userData, cargo: e.target.value})} />
             
             <button disabled={!userData.nombres || !userData.rut || !userData.dept} onClick={() => setStep(1)} className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white p-5 rounded-xl font-black tracking-wide hover:shadow-lg hover:shadow-red-900/50 flex justify-center gap-3 mt-6 items-center disabled:opacity-30 disabled:cursor-not-allowed group transition-all">
               INICIAR SESIÓN <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform"/>
@@ -245,31 +274,27 @@ export default function App() {
   switch (step) {
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Mensaje de la Alcaldesa" 
       visual={
-        <div className="w-full h-full bg-slate-900 flex items-center justify-center relative">
-           {/* VIDEO SEGURO (Sin autoplay forzoso para evitar bloqueo) */}
-           <iframe className="w-full h-full aspect-[9/16] object-cover" src={`https://www.youtube.com/embed/EQUdyb-YVxM?rel=0&modestbranding=1`} title="Mensaje Alcaldesa" frameBorder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
-           <div className="absolute bottom-6 left-6 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
-             <p className="text-white font-bold text-sm">Daniela Norambuena</p>
-             <p className="text-slate-300 text-xs">Alcaldesa de La Serena</p>
-           </div>
+        // AQUÍ ESTÁ EL COMPONENTE DE VIDEO NUEVO
+        <div className="w-full h-full p-4">
+           <SmartVideoPlayer videoId="EQUdyb-YVxM" />
         </div>
       }
       content={
         <div className="animate-in slide-in-from-bottom-8 fade-in duration-700">
-           <p className="font-bold text-3xl text-slate-900 mb-6">¡Bienvenido al Equipo, {userData.nombres}!</p>
+           <p className="font-black text-4xl text-slate-900 mb-8">¡Bienvenido al Equipo, {userData.nombres}!</p>
            
-           <p className="mb-6">Te sumas a una institución con historia. La Serena no es solo la segunda ciudad más antigua de Chile; es una capital patrimonial y turística que exige lo mejor de nosotros.</p>
+           <p className="mb-8 font-light text-2xl text-slate-600">Te sumas a una institución con historia. La Serena no es solo la segunda ciudad más antigua de Chile; es una capital patrimonial que exige lo mejor de nosotros.</p>
            
-           <div className="bg-red-50 p-8 rounded-2xl border-l-4 border-red-500 mb-8 shadow-sm">
-             <Quote className="text-red-300 mb-4" size={32}/>
-             <p className="text-xl font-serif italic text-red-900 leading-relaxed">"Nuestro compromiso es modernizar la gestión municipal. Queremos funcionarios proactivos, empáticos y que entiendan que detrás de cada papel hay una familia esperando una solución."</p>
+           <div className="bg-red-50 p-8 rounded-3xl border-l-8 border-red-500 mb-10 shadow-lg">
+             <Quote className="text-red-300 mb-4" size={40}/>
+             <p className="text-2xl font-serif italic text-red-900 leading-relaxed">"Nuestro compromiso es modernizar la gestión municipal. Queremos funcionarios proactivos, empáticos y que entiendan que detrás de cada papel hay una familia esperando una solución."</p>
            </div>
 
-           <p className="font-medium text-slate-800">En esta inducción conocerás:</p>
-           <ul className="mt-4 space-y-3 pl-2">
-             <li className="flex items-center gap-3"><CheckCircle size={18} className="text-green-500"/> Nuestra Misión y Valores.</li>
-             <li className="flex items-center gap-3"><CheckCircle size={18} className="text-green-500"/> Estructura y Autoridades.</li>
-             <li className="flex items-center gap-3"><CheckCircle size={18} className="text-green-500"/> Tus Derechos y Deberes.</li>
+           <p className="font-bold text-slate-800 text-xl mb-4">En esta inducción conocerás:</p>
+           <ul className="space-y-4">
+             <li className="flex items-center gap-4 text-lg"><div className="bg-green-100 p-2 rounded-full text-green-600"><CheckCircle size={20}/></div> Nuestra Misión y Valores.</li>
+             <li className="flex items-center gap-4 text-lg"><div className="bg-blue-100 p-2 rounded-full text-blue-600"><CheckCircle size={20}/></div> Estructura y Autoridades.</li>
+             <li className="flex items-center gap-4 text-lg"><div className="bg-yellow-100 p-2 rounded-full text-yellow-600"><CheckCircle size={20}/></div> Tus Derechos y Deberes.</li>
            </ul>
         </div>
       } 
@@ -277,40 +302,40 @@ export default function App() {
 
     case 2: return <ChapterLayout title="Carta de Navegación" subtitle="Misión, Visión y Valores" 
       visual={
-        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 text-white p-12 relative overflow-hidden">
+        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 text-white p-12 relative overflow-hidden rounded-[2rem]">
            <div className="absolute top-0 right-0 w-96 h-96 bg-red-600 rounded-full blur-[150px] opacity-20"></div>
            <div className="grid gap-6 w-full relative z-10">
-              <div className="bg-white/5 backdrop-blur-lg p-6 rounded-3xl border border-white/10 hover:bg-white/10 transition-colors">
-                 <div className="flex items-center gap-4 mb-2"><Lightbulb className="text-yellow-400" size={28}/> <h4 className="font-black text-2xl tracking-tight">MISIÓN</h4></div>
-                 <p className="text-slate-300 leading-relaxed">Mejorar la calidad de vida de los habitantes de la comuna a través de una gestión participativa, inclusiva y transparente.</p>
+              <div className="bg-white/5 backdrop-blur-lg p-8 rounded-3xl border border-white/10 hover:bg-white/10 transition-colors cursor-default">
+                 <div className="flex items-center gap-4 mb-3"><Lightbulb className="text-yellow-400" size={32}/> <h4 className="font-black text-3xl tracking-tight">MISIÓN</h4></div>
+                 <p className="text-slate-300 text-lg leading-relaxed">Mejorar la calidad de vida de los habitantes de la comuna a través de una gestión participativa, inclusiva y transparente.</p>
               </div>
-              <div className="bg-white/5 backdrop-blur-lg p-6 rounded-3xl border border-white/10 hover:bg-white/10 transition-colors">
-                 <div className="flex items-center gap-4 mb-2"><MapPin className="text-red-500" size={28}/> <h4 className="font-black text-2xl tracking-tight">VISIÓN</h4></div>
-                 <p className="text-slate-300 leading-relaxed">Ser una comuna líder en desarrollo sostenible, turismo y patrimonio, reconocida por su calidad de vida.</p>
+              <div className="bg-white/5 backdrop-blur-lg p-8 rounded-3xl border border-white/10 hover:bg-white/10 transition-colors cursor-default">
+                 <div className="flex items-center gap-4 mb-3"><MapPin className="text-red-500" size={32}/> <h4 className="font-black text-3xl tracking-tight">VISIÓN</h4></div>
+                 <p className="text-slate-300 text-lg leading-relaxed">Ser una comuna líder en desarrollo sostenible, turismo y patrimonio, reconocida por su calidad de vida.</p>
               </div>
            </div>
         </div>
       }
       content={
         <>
-          <p className="text-2xl font-light text-slate-500 mb-6">Para remar todos hacia el mismo lado, debemos tener clara nuestra brújula.</p>
+          <p className="text-3xl font-light text-slate-500 mb-10">Para remar todos hacia el mismo lado, debemos tener clara nuestra brújula.</p>
           
-          <h4 className="font-black text-slate-900 text-xl mb-6">Nuestros Valores Intransables:</h4>
+          <h4 className="font-black text-slate-900 text-2xl mb-8">Nuestros Valores Intransables:</h4>
           
-          <div className="grid gap-6">
-             <div className="flex gap-6 items-start p-4 hover:bg-slate-50 rounded-xl transition-colors">
-               <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 font-black text-xl shrink-0 shadow-sm">1</div>
-               <div><h4 className="font-bold text-slate-900 text-lg mb-1">Probidad</h4><p className="text-slate-600 text-base">Actuamos con rectitud intachable. Los recursos municipales son sagrados y pertenecen a todos los vecinos.</p></div>
+          <div className="grid gap-8">
+             <div className="flex gap-6 items-start p-6 hover:bg-slate-50 rounded-3xl transition-colors border border-transparent hover:border-slate-100">
+               <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 font-black text-3xl shrink-0 shadow-md">1</div>
+               <div><h4 className="font-bold text-slate-900 text-2xl mb-2">Probidad</h4><p className="text-slate-600 text-lg">Actuamos con rectitud intachable. Los recursos municipales son sagrados y pertenecen a todos los vecinos.</p></div>
              </div>
              
-             <div className="flex gap-6 items-start p-4 hover:bg-slate-50 rounded-xl transition-colors">
-               <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 font-black text-xl shrink-0 shadow-sm">2</div>
-               <div><h4 className="font-bold text-slate-900 text-lg mb-1">Cercanía</h4><p className="text-slate-600 text-base">No somos burócratas, somos servidores públicos. Empatizamos con el problema del otro.</p></div>
+             <div className="flex gap-6 items-start p-6 hover:bg-slate-50 rounded-3xl transition-colors border border-transparent hover:border-slate-100">
+               <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 font-black text-3xl shrink-0 shadow-md">2</div>
+               <div><h4 className="font-bold text-slate-900 text-2xl mb-2">Cercanía</h4><p className="text-slate-600 text-lg">No somos burócratas, somos servidores públicos. Empatizamos con el problema del otro.</p></div>
              </div>
 
-             <div className="flex gap-6 items-start p-4 hover:bg-slate-50 rounded-xl transition-colors">
-               <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center text-green-600 font-black text-xl shrink-0 shadow-sm">3</div>
-               <div><h4 className="font-bold text-slate-900 text-lg mb-1">Transparencia</h4><p className="text-slate-600 text-base">Nuestros actos son públicos. Informamos con claridad y oportundidad a la comunidad.</p></div>
+             <div className="flex gap-6 items-start p-6 hover:bg-slate-50 rounded-3xl transition-colors border border-transparent hover:border-slate-100">
+               <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-green-600 font-black text-3xl shrink-0 shadow-md">3</div>
+               <div><h4 className="font-bold text-slate-900 text-2xl mb-2">Transparencia</h4><p className="text-slate-600 text-lg">Nuestros actos son públicos. Informamos con claridad y oportundidad a la comunidad.</p></div>
              </div>
           </div>
         </>
@@ -319,16 +344,16 @@ export default function App() {
     
     case 3: return <ChapterLayout title="Concejo Municipal" subtitle="El Equipo Fiscalizador" 
       visual={
-        <div className="h-full w-full bg-slate-50 p-8 overflow-y-auto">
+        <div className="h-full w-full bg-slate-100 p-8 overflow-y-auto rounded-[2rem]">
             <div className="grid grid-cols-2 gap-4">
             {CONCEJALES.map((name, i) => (
-               <div key={i} className="bg-white p-4 rounded-2xl shadow-sm hover:shadow-xl transition-all flex flex-col items-center text-center border border-slate-100 group cursor-default">
-                 <div className="w-20 h-20 bg-slate-200 rounded-full mb-3 overflow-hidden ring-4 ring-white group-hover:scale-105 transition-transform">
+               <div key={i} className="bg-white p-6 rounded-3xl shadow-sm hover:shadow-xl transition-all flex flex-col items-center text-center border border-slate-200 group cursor-default">
+                 <div className="w-24 h-24 bg-slate-200 rounded-full mb-4 overflow-hidden ring-4 ring-white group-hover:scale-105 transition-transform shadow-inner">
                    <img src={`/img/concejal_${i+1}.jpg`} onError={(e) => e.currentTarget.style.display='none'} className="w-full h-full object-cover" alt="Foto"/>
-                   <User className="w-full h-full p-4 text-slate-300" />
+                   <User className="w-full h-full p-6 text-slate-300" />
                  </div>
-                 <p className="text-xs font-black text-slate-800 uppercase leading-tight">{name}</p>
-                 <span className="text-[10px] text-red-500 font-bold mt-1 bg-red-50 px-2 py-0.5 rounded-full">Concejal</span>
+                 <p className="text-sm font-black text-slate-800 uppercase leading-tight">{name}</p>
+                 <span className="text-[10px] text-red-500 font-bold mt-2 bg-red-50 px-3 py-1 rounded-full">Concejal</span>
                </div>
             ))}
             </div>
@@ -336,53 +361,53 @@ export default function App() {
       }
       content={
         <>
-          <p className="mb-6">La administración comunal no la ejerce sola la Alcaldesa. Existe un <strong>Concejo Municipal</strong>, un órgano colegiado compuesto por <strong>10 concejales</strong> electos por votación popular.</p>
+          <p className="mb-8 text-xl">La administración comunal no la ejerce sola la Alcaldesa. Existe un <strong>Concejo Municipal</strong>, un órgano colegiado compuesto por <strong>10 concejales</strong> electos por votación popular.</p>
           
-          <div className="bg-yellow-50 border border-yellow-200 p-8 rounded-3xl mb-8">
-             <h4 className="font-bold text-yellow-900 text-xl mb-4 flex items-center gap-2"><Shield className="text-yellow-600"/> ¿Qué hacen los concejales?</h4>
-             <ul className="space-y-4">
-               <li className="flex gap-3">
-                 <CheckCircle size={20} className="text-yellow-600 shrink-0 mt-1"/>
-                 <div><strong>Normar:</strong> Aprueban las ordenanzas que rigen la comuna (aseo, ruidos, tránsito).</div>
+          <div className="bg-yellow-50 border border-yellow-200 p-10 rounded-[2rem] mb-10">
+             <h4 className="font-bold text-yellow-900 text-2xl mb-6 flex items-center gap-3"><Shield className="text-yellow-600" size={32}/> ¿Qué hacen los concejales?</h4>
+             <ul className="space-y-6">
+               <li className="flex gap-4 items-start">
+                 <div className="bg-yellow-200 p-1 rounded-full mt-1"><CheckCircle size={20} className="text-yellow-700"/></div>
+                 <div><strong className="text-lg text-yellow-900 block">Normar</strong>Aprueban las ordenanzas que rigen la comuna (aseo, ruidos, tránsito).</div>
                </li>
-               <li className="flex gap-3">
-                 <CheckCircle size={20} className="text-yellow-600 shrink-0 mt-1"/>
-                 <div><strong>Fiscalizar:</strong> Revisan que el presupuesto municipal se gaste de forma correcta y legal.</div>
+               <li className="flex gap-4 items-start">
+                 <div className="bg-yellow-200 p-1 rounded-full mt-1"><CheckCircle size={20} className="text-yellow-700"/></div>
+                 <div><strong className="text-lg text-yellow-900 block">Fiscalizar</strong>Revisan que el presupuesto municipal se gaste de forma correcta y legal.</div>
                </li>
-               <li className="flex gap-3">
-                 <CheckCircle size={20} className="text-yellow-600 shrink-0 mt-1"/>
-                 <div><strong>Resolver:</strong> Aprueban materias claves como el Plan Regulador, licitaciones grandes y patentes de alcoholes.</div>
+               <li className="flex gap-4 items-start">
+                 <div className="bg-yellow-200 p-1 rounded-full mt-1"><CheckCircle size={20} className="text-yellow-700"/></div>
+                 <div><strong className="text-lg text-yellow-900 block">Resolver</strong>Aprueban materias claves como el Plan Regulador, licitaciones grandes y patentes.</div>
                </li>
              </ul>
           </div>
           
-          <p>Es muy probable que en tu labor debas presentar proyectos o informes ante alguna de las <strong>Comisiones del Concejo</strong> (Salud, Educación, Urbanismo, etc.).</p>
+          <p className="text-lg font-bold text-slate-800">Es muy probable que en tu labor debas presentar proyectos o informes ante alguna de las Comisiones del Concejo.</p>
         </>
       } 
     />;
 
     case 4: return <ChapterLayout title="Organigrama" subtitle="Nuestra Estructura" 
-      visual={<div className="flex items-center justify-center h-full bg-slate-100 p-8"><img src="/img/organigrama_full.png" onError={(e) => e.currentTarget.src='https://placehold.co/1000x1200/png?text=Mapa+Estructural'} className="max-h-full max-w-full object-contain drop-shadow-2xl" /></div>}
+      visual={<div className="flex items-center justify-center h-full bg-slate-100 p-8 rounded-[2rem]"><img src="/img/organigrama_full.png" onError={(e) => e.currentTarget.src='https://placehold.co/1000x1200/png?text=Mapa+Estructural'} className="max-h-full max-w-full object-contain drop-shadow-2xl" /></div>}
       content={
         <>
-          <p className="mb-6">Somos una institución grande y compleja. Entender el organigrama es vital para saber a quién acudir y respetar los conductos regulares.</p>
+          <p className="mb-8 text-xl">Somos una institución grande y compleja. Entender el organigrama es vital para saber a quién acudir y respetar los conductos regulares.</p>
           
-          <h4 className="font-bold text-slate-900 text-lg mb-4">Direcciones Clave que debes conocer:</h4>
+          <h4 className="font-bold text-slate-900 text-2xl mb-6">Direcciones Clave que debes conocer:</h4>
           
-          <div className="grid gap-4">
-             <div className="flex items-start gap-4 p-4 bg-white border border-slate-100 shadow-sm rounded-2xl hover:border-red-200 transition-colors">
-                <div className="bg-red-100 p-3 rounded-xl text-red-600 shrink-0"><Heart size={24}/></div>
-                <div><h4 className="font-bold text-slate-900">DIDECO (Desarrollo Comunitario)</h4><p className="text-sm text-slate-500 mt-1">El "corazón social". Gestiona ayudas sociales, organizaciones comunitarias, subsidios y programas para el adulto mayor.</p></div>
+          <div className="grid gap-6">
+             <div className="flex items-start gap-6 p-6 bg-white border border-slate-100 shadow-lg rounded-3xl hover:border-red-200 transition-colors group">
+                <div className="bg-red-100 p-4 rounded-2xl text-red-600 shrink-0 group-hover:scale-110 transition-transform"><Heart size={32}/></div>
+                <div><h4 className="font-bold text-slate-900 text-xl">DIDECO (Desarrollo Comunitario)</h4><p className="text-base text-slate-500 mt-2">El "corazón social". Gestiona ayudas sociales, organizaciones comunitarias, subsidios y programas para el adulto mayor.</p></div>
              </div>
              
-             <div className="flex items-start gap-4 p-4 bg-white border border-slate-100 shadow-sm rounded-2xl hover:border-blue-200 transition-colors">
-                <div className="bg-blue-100 p-3 rounded-xl text-blue-600 shrink-0"><Building2 size={24}/></div>
-                <div><h4 className="font-bold text-slate-900">DOM (Obras Municipales)</h4><p className="text-sm text-slate-500 mt-1">El brazo técnico. Otorga permisos de edificación, recepciones finales y fiscaliza construcciones en la comuna.</p></div>
+             <div className="flex items-start gap-6 p-6 bg-white border border-slate-100 shadow-lg rounded-3xl hover:border-blue-200 transition-colors group">
+                <div className="bg-blue-100 p-4 rounded-2xl text-blue-600 shrink-0 group-hover:scale-110 transition-transform"><Building2 size={32}/></div>
+                <div><h4 className="font-bold text-slate-900 text-xl">DOM (Obras Municipales)</h4><p className="text-base text-slate-500 mt-2">El brazo técnico. Otorga permisos de edificación, recepciones finales y fiscaliza construcciones en la comuna.</p></div>
              </div>
              
-             <div className="flex items-start gap-4 p-4 bg-white border border-slate-100 shadow-sm rounded-2xl hover:border-green-200 transition-colors">
-                <div className="bg-green-100 p-3 rounded-xl text-green-600 shrink-0"><Map size={24}/></div>
-                <div><h4 className="font-bold text-slate-900">SECPLAN (Planificación)</h4><p className="text-sm text-slate-500 mt-1">El "cerebro". Diseña los proyectos de inversión (plazas, pavimentos, estadios) y postula a financiamiento externo.</p></div>
+             <div className="flex items-start gap-6 p-6 bg-white border border-slate-100 shadow-lg rounded-3xl hover:border-green-200 transition-colors group">
+                <div className="bg-green-100 p-4 rounded-2xl text-green-600 shrink-0 group-hover:scale-110 transition-transform"><Map size={32}/></div>
+                <div><h4 className="font-bold text-slate-900 text-xl">SECPLAN (Planificación)</h4><p className="text-base text-slate-500 mt-2">El "cerebro". Diseña los proyectos de inversión (plazas, pavimentos, estadios) y postula a financiamiento externo.</p></div>
              </div>
           </div>
         </>
@@ -391,56 +416,40 @@ export default function App() {
 
     case 5: return <ChapterLayout title="Ecosistema" subtitle="Mapa de Públicos" 
       visual={
-        <div className="relative w-full h-full flex items-center justify-center bg-slate-900 overflow-hidden">
-           {/* Animación Sistema Solar */}
-           <div className="absolute w-[600px] h-[600px] border border-slate-700 rounded-full animate-spin-slow opacity-20"></div>
-           <div className="absolute w-[400px] h-[400px] border border-slate-600 rounded-full animate-spin-reverse opacity-20"></div>
-           
+        <div className="relative w-full h-full flex items-center justify-center bg-slate-900 overflow-hidden rounded-[2rem]">
+           <div className="absolute w-[600px] h-[600px] border border-slate-700 rounded-full animate-spin-slow opacity-30"></div>
            <div className="z-20 bg-white text-slate-900 w-32 h-32 rounded-full flex items-center justify-center font-black text-2xl shadow-[0_0_50px_white] animate-pulse">IMLS</div>
-           
-           {/* Planetas */}
-           <div className="absolute top-[15%] left-[20%] bg-blue-500/10 backdrop-blur-md p-4 rounded-2xl border border-blue-500/50 flex flex-col items-center gap-2">
-             <User className="text-blue-400"/>
-             <span className="text-xs font-bold text-blue-200 uppercase">Vecinos</span>
-           </div>
-           
-           <div className="absolute bottom-[20%] right-[15%] bg-green-500/10 backdrop-blur-md p-4 rounded-2xl border border-green-500/50 flex flex-col items-center gap-2">
-             <Briefcase className="text-green-400"/>
-             <span className="text-xs font-bold text-green-200 uppercase">Empresas</span>
-           </div>
-           
-           <div className="absolute top-[20%] right-[20%] bg-purple-500/10 backdrop-blur-md p-4 rounded-2xl border border-purple-500/50 flex flex-col items-center gap-2">
-             <Building2 className="text-purple-400"/>
-             <span className="text-xs font-bold text-purple-200 uppercase">Gobierno</span>
-           </div>
+           <div className="absolute top-[15%] left-[20%] bg-blue-500/10 backdrop-blur-md p-4 rounded-2xl border border-blue-500/50 flex flex-col items-center gap-2"><User className="text-blue-400" size={32}/><span className="text-sm font-bold text-blue-200 uppercase">Vecinos</span></div>
+           <div className="absolute bottom-[20%] right-[15%] bg-green-500/10 backdrop-blur-md p-4 rounded-2xl border border-green-500/50 flex flex-col items-center gap-2"><Briefcase className="text-green-400" size={32}/><span className="text-sm font-bold text-green-200 uppercase">Empresas</span></div>
+           <div className="absolute top-[20%] right-[20%] bg-purple-500/10 backdrop-blur-md p-4 rounded-2xl border border-purple-500/50 flex flex-col items-center gap-2"><Building2 className="text-purple-400" size={32}/><span className="text-sm font-bold text-purple-200 uppercase">Gobierno</span></div>
         </div>
       }
       content={
         <>
-          <p className="text-xl mb-6">No somos una isla. El municipio es un organismo vivo que interactúa 24/7 con su entorno.</p>
+          <p className="text-2xl mb-8 font-light">No somos una isla. El municipio es un organismo vivo que interactúa 24/7 con su entorno.</p>
           
-          <div className="space-y-6">
-            <div className="flex gap-4">
-              <div className="w-1 bg-blue-500 rounded-full"></div>
+          <div className="space-y-8">
+            <div className="flex gap-6">
+              <div className="w-2 bg-blue-500 rounded-full"></div>
               <div>
-                <h4 className="font-bold text-slate-900 text-lg">1. El Vecino (Nuestro Centro)</h4>
-                <p className="text-slate-600">Es la razón de ser del municipio. Todo proceso debe pensarse para facilitarle la vida, desde que nace hasta que requiere un servicio social.</p>
+                <h4 className="font-black text-slate-900 text-2xl mb-2">1. El Vecino (Nuestro Centro)</h4>
+                <p className="text-slate-600 text-lg">Es la razón de ser del municipio. Todo proceso debe pensarse para facilitarle la vida, desde que nace hasta que requiere un servicio social.</p>
               </div>
             </div>
 
-            <div className="flex gap-4">
-               <div className="w-1 bg-green-500 rounded-full"></div>
+            <div className="flex gap-6">
+               <div className="w-2 bg-green-500 rounded-full"></div>
                <div>
-                 <h4 className="font-bold text-slate-900 text-lg">2. Proveedores y Privados</h4>
-                 <p className="text-slate-600">Socios estratégicos. Sin ellos no podríamos construir obras, retirar la basura o mantener las áreas verdes.</p>
+                 <h4 className="font-black text-slate-900 text-2xl mb-2">2. Proveedores y Privados</h4>
+                 <p className="text-slate-600 text-lg">Socios estratégicos. Sin ellos no podríamos construir obras, retirar la basura o mantener las áreas verdes.</p>
                </div>
             </div>
 
-            <div className="flex gap-4">
-               <div className="w-1 bg-purple-500 rounded-full"></div>
+            <div className="flex gap-6">
+               <div className="w-2 bg-purple-500 rounded-full"></div>
                <div>
-                 <h4 className="font-bold text-slate-900 text-lg">3. Otras Instituciones</h4>
-                 <p className="text-slate-600">Carabineros, Bomberos, Gobierno Regional. La coordinación con ellos es vital para emergencias y grandes proyectos.</p>
+                 <h4 className="font-black text-slate-900 text-2xl mb-2">3. Otras Instituciones</h4>
+                 <p className="text-slate-600 text-lg">Carabineros, Bomberos, Gobierno Regional. La coordinación con ellos es vital para emergencias y grandes proyectos.</p>
                </div>
             </div>
           </div>
@@ -448,89 +457,91 @@ export default function App() {
       } 
     />;
 
-    case 6: return <ChapterLayout title="Remuneraciones" subtitle="Somos un Solo Equipo" visual={<div className="flex items-center justify-center h-full bg-gradient-to-br from-green-50 to-green-100"><DollarSign size={200} className="text-green-600/50 drop-shadow-2xl" /></div>} 
+    case 6: return <ChapterLayout title="Remuneraciones" subtitle="Somos un Solo Equipo" visual={<div className="flex items-center justify-center h-full bg-gradient-to-br from-green-50 to-green-100 rounded-[2rem]"><DollarSign size={200} className="text-green-600/50 drop-shadow-2xl" /></div>} 
       content={
         <>
-          <p className="mb-6 text-xl">En el municipio conviven distintas modalidades contractuales, pero quiero que sepas algo: <strong>todos somos compañeros de trabajo</strong> con la misma camiseta.</p>
+          <p className="mb-8 text-2xl font-light">En el municipio conviven distintas modalidades contractuales, pero quiero que sepas algo: <strong>todos somos compañeros de trabajo</strong> con la misma camiseta.</p>
           
-          <div className="grid gap-4">
-             <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-green-300 transition-colors">
-               <div className="flex justify-between mb-2 items-center">
-                 <strong className="text-slate-900 font-black uppercase tracking-wide">Planta y Contrata</strong>
-                 <span className="text-[10px] bg-green-100 text-green-800 px-3 py-1 rounded-full font-bold">Estatuto Administrativo</span>
+          <div className="grid gap-6">
+             <div className="p-8 bg-white border border-slate-200 rounded-[2rem] shadow-sm hover:border-green-300 transition-colors">
+               <div className="flex justify-between mb-4 items-center">
+                 <strong className="text-slate-900 font-black uppercase tracking-wide text-lg">Planta y Contrata</strong>
+                 <span className="text-xs bg-green-100 text-green-800 px-4 py-1.5 rounded-full font-bold">Estatuto Administrativo</span>
                </div>
-               <p className="text-slate-600">Son funcionarios públicos. Su sueldo se paga religiosamente el <strong>penúltimo día hábil del mes</strong>.</p>
+               <p className="text-slate-600 text-lg">Son funcionarios públicos. Su sueldo se paga religiosamente el <strong>penúltimo día hábil del mes</strong>.</p>
              </div>
              
-             <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-blue-300 transition-colors">
-               <div className="flex justify-between mb-2 items-center">
-                 <strong className="text-slate-900 font-black uppercase tracking-wide">Honorarios</strong>
-                 <span className="text-[10px] bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold">Código Civil</span>
+             <div className="p-8 bg-white border border-slate-200 rounded-[2rem] shadow-sm hover:border-blue-300 transition-colors">
+               <div className="flex justify-between mb-4 items-center">
+                 <strong className="text-slate-900 font-black uppercase tracking-wide text-lg">Honorarios</strong>
+                 <span className="text-xs bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full font-bold">Código Civil</span>
                </div>
-               <p className="text-slate-600">Prestadores de servicios. La fecha de pago es variable (generalmente primeros días del mes siguiente) y depende de la entrega oportuna del <strong>Informe de Actividades</strong>.</p>
+               <p className="text-slate-600 text-lg">Prestadores de servicios. La fecha de pago es variable (generalmente primeros días del mes siguiente) y depende de la entrega oportuna del <strong>Informe de Actividades</strong>.</p>
              </div>
           </div>
           
-          <div className="mt-8 p-4 bg-slate-50 rounded-xl border-l-4 border-slate-400">
-             <p className="text-sm italic text-slate-500">"La calidad jurídica no define tu valor como persona ni tu aporte a la ciudad. El respeto es transversal."</p>
+          <div className="mt-10 p-6 bg-slate-50 rounded-2xl border-l-8 border-slate-300">
+             <p className="text-lg italic text-slate-500 font-serif">"La calidad jurídica no define tu valor como persona ni tu aporte a la ciudad. El respeto es transversal."</p>
           </div>
         </>
       } 
     />;
 
-    case 7: return <ChapterLayout title="Ley Karin" subtitle="Dignidad y Respeto" visual={<div className="flex items-center justify-center h-full bg-pink-50"><Heart size={200} className="text-pink-400/50 animate-pulse" /></div>} 
+    case 7: return <ChapterLayout title="Ley Karin" subtitle="Dignidad y Respeto" visual={<div className="flex items-center justify-center h-full bg-pink-50 rounded-[2rem]"><Heart size={200} className="text-pink-400/50 animate-pulse" /></div>} 
       content={
         <>
-          <p className="mb-6 text-xl">La entrada en vigencia de la <strong>Ley N° 21.643</strong> marca un antes y un después. Establece un nuevo estándar de dignidad en el trabajo.</p>
+          <p className="mb-8 text-2xl font-light">La entrada en vigencia de la <strong>Ley N° 21.643</strong> marca un antes y un después. Establece un nuevo estándar de dignidad en el trabajo.</p>
           
-          <h4 className="font-bold text-slate-900 text-lg mb-4">Tolerancia Cero con:</h4>
+          <h4 className="font-black text-slate-900 text-2xl mb-6">Tolerancia Cero con:</h4>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-pink-50 p-4 rounded-2xl text-center border border-pink-100 hover:scale-105 transition-transform">
-               <span className="text-4xl block mb-2">🚫</span>
-               <p className="font-bold text-pink-900 text-sm">Acoso Laboral</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div className="bg-pink-50 p-6 rounded-3xl text-center border border-pink-100 hover:scale-105 transition-transform shadow-sm">
+               <span className="text-5xl block mb-4">🚫</span>
+               <p className="font-bold text-pink-900 text-lg">Acoso Laboral</p>
             </div>
-            <div className="bg-pink-50 p-4 rounded-2xl text-center border border-pink-100 hover:scale-105 transition-transform">
-               <span className="text-4xl block mb-2">✋</span>
-               <p className="font-bold text-pink-900 text-sm">Acoso Sexual</p>
+            <div className="bg-pink-50 p-6 rounded-3xl text-center border border-pink-100 hover:scale-105 transition-transform shadow-sm">
+               <span className="text-5xl block mb-4">✋</span>
+               <p className="font-bold text-pink-900 text-lg">Acoso Sexual</p>
             </div>
-            <div className="bg-pink-50 p-4 rounded-2xl text-center border border-pink-100 hover:scale-105 transition-transform">
-               <span className="text-4xl block mb-2">🗣️</span>
-               <p className="font-bold text-pink-900 text-sm">Violencia (Usuarios)</p>
+            <div className="bg-pink-50 p-6 rounded-3xl text-center border border-pink-100 hover:scale-105 transition-transform shadow-sm">
+               <span className="text-5xl block mb-4">🗣️</span>
+               <p className="font-bold text-pink-900 text-lg">Violencia</p>
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100">
-            <h5 className="font-bold text-slate-900 mb-2">¿Qué cambia?</h5>
-            <p className="text-slate-600">Ya no necesitas demostrar que el acoso fue "reiterado". <strong>Un solo acto grave es suficiente</strong> para denunciar. El municipio cuenta con protocolos estrictos y confidenciales para protegerte.</p>
+          <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+            <h5 className="font-black text-slate-900 text-xl mb-3">¿Qué cambia?</h5>
+            <p className="text-slate-600 text-lg">Ya no necesitas demostrar que el acoso fue "reiterado". <strong>Un solo acto grave es suficiente</strong> para denunciar. El municipio cuenta con protocolos estrictos y confidenciales para protegerte.</p>
           </div>
         </>
       } 
     />;
 
-    case 8: return <ChapterLayout title="Seguridad Laboral" subtitle="Tu vida es primero" visual={<div className="flex items-center justify-center h-full bg-yellow-50"><Shield size={200} className="text-yellow-500/50" /></div>} 
+    case 8: return <ChapterLayout title="Seguridad Laboral" subtitle="Tu vida es primero" visual={<div className="flex items-center justify-center h-full bg-yellow-50 rounded-[2rem]"><Shield size={200} className="text-yellow-500/50" /></div>} 
       content={
         <>
-          <p className="mb-6 text-xl">Trabajar seguros es responsabilidad de todos. Aquí tienes las reglas de oro que pueden salvarte la vida.</p>
+          <p className="mb-8 text-2xl font-light">Trabajar seguros es responsabilidad de todos. Aquí tienes las reglas de oro que pueden salvarte la vida.</p>
           
-          <div className="space-y-6">
-             <div className="flex gap-4 items-start">
-               <div className="bg-blue-100 p-3 rounded-xl text-blue-600 shrink-0"><MapPin size={24}/></div>
+          <div className="space-y-8">
+             <div className="flex gap-6 items-start">
+               <div className="bg-blue-100 p-4 rounded-2xl text-blue-600 shrink-0"><MapPin size={32}/></div>
                <div>
-                 <h4 className="font-bold text-slate-900 text-lg">Zona de Tsunamis</h4>
-                 <p className="text-slate-600">La Serena es costera. Ante un sismo fuerte que te impida mantenerte en pie, evacúa inmediatamente hacia la <strong>Cota 30</strong> (Desde Av. Cisternas hacia arriba).</p>
+                 <h4 className="font-black text-slate-900 text-2xl mb-2">Zona de Tsunamis</h4>
+                 <p className="text-slate-600 text-lg">La Serena es costera. Ante un sismo fuerte que te impida mantenerte en pie, evacúa inmediatamente hacia la <strong>Cota 30</strong> (Desde Av. Cisternas hacia arriba).</p>
                </div>
              </div>
 
-             <div className="flex gap-4 items-start">
-               <div className="bg-red-100 p-3 rounded-xl text-red-600 shrink-0"><AlertCircle size={24}/></div>
+             <div className="flex gap-6 items-start">
+               <div className="bg-red-100 p-4 rounded-2xl text-red-600 shrink-0"><AlertCircle size={32}/></div>
                <div>
-                 <h4 className="font-bold text-slate-900 text-lg">Accidentes Laborales</h4>
-                 <p className="text-slate-600 mb-2">Si te lesionas trabajando o en el trayecto directo casa-trabajo:</p>
-                 <div className="bg-slate-50 p-4 rounded-xl text-sm font-bold text-slate-700 border-l-4 border-red-500">
-                    1. AVISAR INMEDIATAMENTE a tu jefatura.<br/>
-                    2. Acudir a la ACHS.<br/>
-                    3. No irse a casa sin registro (pierdes la cobertura).
+                 <h4 className="font-black text-slate-900 text-2xl mb-2">Accidentes Laborales</h4>
+                 <p className="text-slate-600 text-lg mb-4">Si te lesionas trabajando o en el trayecto directo casa-trabajo:</p>
+                 <div className="bg-red-50 p-6 rounded-2xl text-lg font-bold text-red-800 border border-red-100">
+                    <ol className="list-decimal ml-6 space-y-2">
+                      <li>AVISAR INMEDIATAMENTE a tu jefatura.</li>
+                      <li>Acudir a la ACHS.</li>
+                      <li>No irse a casa sin registro (pierdes la cobertura).</li>
+                    </ol>
                  </div>
                </div>
              </div>
@@ -542,7 +553,6 @@ export default function App() {
     // 9. QUIZ
     case 9: return (
       <div className="h-screen bg-slate-900 flex flex-col items-center justify-center text-white p-4 print:hidden relative overflow-hidden">
-        {/* Barra Progreso Quiz */}
         <div className="absolute top-0 w-full h-2 bg-slate-800"><div className="bg-green-500 h-full transition-all duration-300" style={{width: `${((quizIndex+1)/QUESTIONS.length)*100}%`}}></div></div>
         
         <div className="max-w-2xl w-full relative z-10 pb-10 overflow-y-auto max-h-screen">
@@ -574,7 +584,6 @@ export default function App() {
                  ))}
                </div>
 
-               {/* FEEDBACK */}
                {quizState !== 'waiting' && (
                  <div className={`mt-8 p-6 rounded-2xl ${quizState === 'correct' ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900'} animate-in slide-in-from-bottom-4 shadow-inner`}>
                     <p className="font-black text-lg mb-2 flex items-center gap-2">
