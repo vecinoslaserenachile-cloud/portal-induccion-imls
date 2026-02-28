@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 // --- DATOS MUNICIPALES ---
-const DEPARTAMENTOS = ["Alcaldía", "Administración Municipal", "Secretaría Municipal", "SECPLAN", "DIDECO", "Dirección de Obras (DOM)", "Gestión de Personas", "Seguridad Ciudadana", "Tránsito", "Turismo y Patrimonio", "Servicio a la Comunidad", "Salud", "Educación", "Asesoría Jurídica", "Control"];
+const DEPARTAMENTOS = ["Alcaldía", "Administración Municipal", "Secretaría Municipal", "SECPLAN", "DIDECO", "Dirección de Obras (DOM)", "Gestión de Personas", "Seguridad Ciudadana", "Tránsito", "Turismo y Patrimonio", "Servicio a la Comunidad", "Salud", "Educación", "Jurídica", "Control"];
 
 const CONCEJALES = ["Cristian Marín", "Rayen Pojomovsky", "Alejandro Astudillo", "Gladys Marín", "Francisca Barahona", "María Teresita Prouvay", "Camilo Araya", "María Marcela Damke", "Matías Espinosa", "Luisa Jinete"];
 
@@ -27,6 +27,53 @@ const QUESTIONS = [
   { q: "¿Valor intransable?", options: ["Rapidez", "Probidad", "Simpatía"], ans: 1, explanation: "La Probidad es la base ética de nuestra función." },
   { q: "¿Qué hacer al terminar?", options: ["Irse", "Unirse a la Comunidad Digital", "Nada"], ans: 1, explanation: "¡Bienvenido! Súmate a nuestras redes y portales." },
 ];
+
+// --- COMPONENTE DE VIDEO BLINDADO (LA SOLUCIÓN) ---
+const VideoPlayer = () => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Si el usuario ya hizo clic, mostramos el video REAL
+  if (isPlaying) {
+    return (
+      <div className="w-full h-full bg-black rounded-[2rem] overflow-hidden shadow-2xl animate-in fade-in duration-500">
+        <iframe 
+          className="w-full h-full aspect-video" 
+          src="https://www.youtube.com/embed/EQUdyb-YVxM?autoplay=1&rel=0&modestbranding=1&playsinline=1" 
+          title="Mensaje Alcaldesa" 
+          frameBorder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowFullScreen
+        ></iframe>
+      </div>
+    );
+  }
+
+  // Si no ha hecho clic, mostramos la PORTADA ESTÁTICA (Cero consumo de recursos, cero loops)
+  return (
+    <div 
+      className="w-full h-full relative cursor-pointer group rounded-[2rem] overflow-hidden shadow-2xl bg-slate-900 flex items-center justify-center border border-white/20"
+      onClick={() => setIsPlaying(true)}
+    >
+      {/* Imagen de portada de alta calidad */}
+      <img 
+        src="https://img.youtube.com/vi/EQUdyb-YVxM/maxresdefault.jpg" 
+        className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700"
+        alt="Portada Video"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+      
+      {/* Botón de Play Gigante */}
+      <div className="relative z-10 flex flex-col items-center gap-4">
+        <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(220,38,38,0.8)] group-hover:scale-110 transition-transform duration-300">
+          <Play size={40} fill="white" className="text-white ml-2" />
+        </div>
+        <div className="text-center bg-black/60 px-6 py-2 rounded-full backdrop-blur-md">
+          <p className="text-white font-black uppercase tracking-[0.2em] text-lg">VER SALUDO</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // --- APP PRINCIPAL ---
 export default function App() {
@@ -53,14 +100,12 @@ export default function App() {
 
   const handleScroll = (e: any) => {
     const el = e.target;
-    // Margen amplio para asegurar desbloqueo
     if (el.scrollHeight - el.scrollTop <= el.clientHeight + 150) {
       setCanAdvance(true);
     }
   };
 
   useEffect(() => {
-    // Pasos que NO bloquean (Login, Video, Finales)
     if ([0, 1, 11, 12].includes(step)) {
       setCanAdvance(true);
     } else {
@@ -69,9 +114,8 @@ export default function App() {
         if (scrollRef.current && scrollRef.current.scrollHeight <= scrollRef.current.clientHeight + 50) {
           setCanAdvance(true);
         }
-      }, 1500);
+      }, 1000);
     }
-    // Reset Scroll
     window.scrollTo(0, 0);
     if(scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [step]);
@@ -101,14 +145,14 @@ export default function App() {
       </div>
       
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* VISUAL (Izquierda / Arriba) */}
+        {/* VISUAL (Arriba móvil / Izq PC) */}
         <div className="w-full lg:w-1/2 h-[35vh] lg:h-full bg-slate-900 flex items-center justify-center p-4 lg:p-12 relative border-b lg:border-b-0 lg:border-r border-white/5 z-10">
            <div className="w-full h-full lg:rounded-[3rem] overflow-hidden shadow-2xl bg-black border border-white/10 flex items-center justify-center relative">
              {visual}
            </div>
         </div>
 
-        {/* CONTENIDO (Derecha / Abajo) */}
+        {/* CONTENIDO (Abajo móvil / Der PC) */}
         <div className="w-full lg:w-1/2 flex flex-col h-[65vh] lg:h-full bg-slate-950 overflow-hidden relative z-20">
           <div className="px-8 lg:px-16 pt-10 pb-6 shrink-0 border-b border-white/5 bg-slate-950/95 backdrop-blur-md">
              <div className="flex items-center gap-3 mb-2">
@@ -185,20 +229,8 @@ export default function App() {
   );
 
   switch (step) {
-    // 1. VIDEO (NATIVO - SIN AUTOPLAY - SIN LOOP - SIN PROBLEMAS)
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Daniela Norambuena, Alcaldesa" 
-      visual={
-        <div className="w-full h-full bg-black rounded-[2rem] overflow-hidden shadow-2xl border border-white/20">
-          <iframe 
-            className="w-full h-full" 
-            src="https://www.youtube.com/embed/EQUdyb-YVxM?rel=0&modestbranding=1" 
-            title="Bienvenida Alcaldesa" 
-            frameBorder="0" 
-            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowFullScreen
-          ></iframe>
-        </div>
-      }
+      visual={<VideoPlayer />}
       content={<><p className="font-black text-5xl text-white mb-8 italic tracking-tighter">¡Hola, {userData.nombres}!</p><p>Te damos la bienvenida a la **Ilustre Municipalidad de La Serena**. Te sumas a una institución con más de 480 años de historia, pero con una visión de futuro moderna e innovadora.</p><div className="bg-red-600/20 p-8 rounded-3xl border-l-4 border-red-600 italic text-xl text-red-100">"Nuestra gestión pone al vecino en el centro. Buscamos funcionarios proactivos, empáticos y modernos."</div><p className="text-slate-400 text-sm mt-4">Haz clic en el video para ver el saludo oficial.</p></>} 
     />;
 
@@ -245,7 +277,7 @@ export default function App() {
 
     case 9: return <ChapterLayout title="Protección" subtitle="Mutualidad y Emergencias" 
       visual={<div className="p-12"><HardHat size={150} className="text-yellow-500 mx-auto animate-bounce"/></div>}
-      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad CChC</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><Radio size={30}/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
+      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><Radio size={30}/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
     />;
 
     case 10: return <ChapterLayout title="Educación" subtitle="Capacitación Continua" 
@@ -281,7 +313,6 @@ export default function App() {
              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in">
                <Award size={100} className="text-yellow-500 mb-8 animate-bounce" />
                <h2 className="text-5xl font-black text-white mb-6 uppercase italic">¡APROBADO!</h2>
-               <p className="text-slate-400 mb-10 text-lg">Has completado la inducción 2026.</p>
                <button onClick={() => setStep(12)} className="bg-red-600 text-white py-4 px-10 rounded-2xl font-black uppercase tracking-widest text-lg shadow-xl hover:scale-105 transition-transform">Ver Diploma</button>
              </div>
            )}
