@@ -2,12 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle, ChevronRight, ChevronLeft, Award, 
   ChevronDown, Shield, Heart, DollarSign, 
-  Printer, RefreshCw, User, Map, Briefcase, 
-  Building2, Lightbulb, Clock, QrCode, Smartphone, 
-  ArrowRight, AlertCircle, Quote
+  Printer, RefreshCw, User, Map, FileText, 
+  Clock, Smartphone, ArrowRight, Play, Star
 } from 'lucide-react';
 
-// --- DATOS ---
+// --- BASE DE DATOS ---
 const DEPARTAMENTOS = [
   "Alcaldía", "Gabinete", "Administración Municipal", "Secretaría Municipal", 
   "Asesoría Jurídica", "Dirección de Control", "SECPLAN", 
@@ -39,9 +38,10 @@ const CONCEJALES = [
 export default function App() {
   const [step, setStep] = useState(0); 
   const [userData, setUserData] = useState({ nombres: '', apellidos: '', rut: '', dept: '', cargo: '' });
-  // ELIMINADO EL ESTADO 'canAdvance' GLOBAL QUE CAUSABA EL BUCLE
+  const [canAdvance, setCanAdvance] = useState(true); 
+  const [currentTime, setCurrentTime] = useState(new Date());
   
-  // Quiz Logic
+  // Quiz
   const [quizIndex, setQuizIndex] = useState(0);
   const [quizState, setQuizState] = useState<'waiting' | 'correct' | 'wrong'>('waiting');
   const [score, setScore] = useState(0);
@@ -50,26 +50,32 @@ export default function App() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const totalSteps = 12;
 
-  // Fecha para el certificado (Estática al cargar para evitar re-renders infinitos)
-  const today = new Date().toLocaleDateString();
-
-  // Reset del scroll al cambiar de paso
+  // Reloj
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = 0;
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Control de Scroll (Solo visual)
+  const checkProgress = () => {
+    const el = scrollRef.current;
+    if (el) {
+      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
+      const isShort = el.scrollHeight <= el.clientHeight + 50;
+      if (isAtBottom || isShort) setCanAdvance(true);
     }
+  };
+
+  useEffect(() => {
+    if ([0, 1, 9, 10, 11].includes(step)) {
+      setCanAdvance(true);
+    } else {
+      setCanAdvance(false);
+      setTimeout(checkProgress, 800);
+    }
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [step]);
 
-  // --- LÓGICA DE NAVEGACIÓN SEGURA ---
-  const goNext = () => {
-    setStep(prev => prev + 1);
-  };
-
-  const goBack = () => {
-    setStep(prev => Math.max(0, prev - 1));
-  };
-
-  // --- LÓGICA DEL QUIZ ---
   const handleAnswer = (optionIndex: number) => {
     if (quizState !== 'waiting') return;
     const isCorrect = optionIndex === QUESTIONS[quizIndex].ans;
@@ -92,93 +98,118 @@ export default function App() {
 
   const printCertificate = () => window.print();
 
-  // --- LAYOUT ---
+  // --- LAYOUT "GLASSMORPHISM" (ESTILO GLOW) ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="h-screen w-full flex flex-col lg:flex-row bg-slate-50 text-slate-900 overflow-hidden font-sans">
       
+      {/* Fondo Degradado Suave */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-200 rounded-full blur-[100px] opacity-20"></div>
+         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-200 rounded-full blur-[100px] opacity-20"></div>
+      </div>
+
       {/* Barra Progreso */}
       <div className="fixed top-0 w-full h-2 bg-slate-200 z-50">
-        <div className="h-full bg-red-600 transition-all duration-300" style={{ width: `${(step / totalSteps) * 100}%` }}></div>
+        <div className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-500 shadow-lg" style={{ width: `${(step / totalSteps) * 100}%` }}></div>
       </div>
       
-      {/* VISUAL */}
-      <div className="lg:order-2 lg:w-1/2 w-full lg:h-full h-[35vh] bg-slate-100 flex items-center justify-center relative p-0 lg:p-12 border-b lg:border-b-0 lg:border-l border-slate-200">
-        <div className="w-full h-full lg:rounded-3xl overflow-hidden shadow-none lg:shadow-2xl bg-white relative">
+      {/* VISUAL (Desktop Izquierda / Móvil Arriba) */}
+      <div className="lg:order-2 lg:w-1/2 w-full lg:h-full h-[35vh] bg-white/50 backdrop-blur-sm flex items-center justify-center relative p-0 lg:p-12 border-b lg:border-b-0 lg:border-l border-slate-200 z-10">
+        <div className="w-full h-full lg:rounded-[2rem] overflow-hidden shadow-2xl bg-white relative ring-1 ring-slate-900/5 transform transition-transform hover:scale-[1.01] duration-500">
            {visual}
         </div>
       </div>
 
-      {/* CONTENIDO */}
-      <div className="lg:order-1 lg:w-1/2 w-full flex flex-col h-[65vh] lg:h-full bg-white relative z-10">
+      {/* CONTENIDO (Desktop Derecha / Móvil Abajo) */}
+      <div className="lg:order-1 lg:w-1/2 w-full flex flex-col h-[65vh] lg:h-full relative z-20 bg-white/80 backdrop-blur-xl">
         
-        <div className="px-8 lg:px-16 pt-8 pb-4 shrink-0 bg-white border-b border-slate-100">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Módulo {step}</span>
+        {/* Header */}
+        <div className="px-8 lg:px-16 pt-10 pb-6 shrink-0 border-b border-slate-100/50">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-red-500/30 shadow-lg">Módulo {step}</span>
             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Inducción 2026</span>
           </div>
-          <h2 className="text-3xl lg:text-5xl font-black text-slate-900 leading-[0.9] tracking-tighter mb-2">{title}</h2>
+          <h2 className="text-3xl lg:text-6xl font-black text-slate-900 leading-[0.9] tracking-tighter mb-2">{title}</h2>
+          <div className="h-1.5 w-24 bg-red-600 rounded-full mb-3"></div>
           <h3 className="text-lg lg:text-2xl text-slate-500 font-serif italic">{subtitle}</h3>
         </div>
         
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-8 lg:px-16 py-6 scroll-smooth">
-          <div className="space-y-8 text-lg lg:text-xl text-slate-700 leading-relaxed">
+        {/* Cuerpo Scrollable */}
+        <div ref={scrollRef} onScroll={checkProgress} className="flex-1 overflow-y-auto px-8 lg:px-16 py-8 scroll-smooth">
+          <div className="space-y-8 text-lg lg:text-xl text-slate-700 leading-relaxed font-light">
             {content}
-            <div className="h-12"></div>
+            <div className="h-24"></div>
           </div>
         </div>
 
-        {/* BOTONERA SIN BLOQUEOS NI CONDICIONES */}
-        <div className="px-8 lg:px-16 py-4 border-t border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-20">
-           <button onClick={goBack} className="text-slate-500 hover:text-slate-900 font-bold text-xs uppercase flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-slate-100 transition-colors">
+        {/* Botonera Glass */}
+        <div className="px-8 lg:px-16 py-6 border-t border-slate-200/60 bg-white/90 backdrop-blur-md flex items-center justify-between shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-30">
+           
+           <button 
+             onClick={() => setStep(s => Math.max(0, s - 1))} 
+             className="text-slate-500 hover:text-slate-900 font-bold text-xs uppercase flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 transition-colors"
+           >
              <ChevronLeft size={16}/> Atrás
            </button>
 
-           <button onClick={goNext} className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-red-600 transition-all flex items-center gap-2 text-sm uppercase tracking-wide transform hover:-translate-y-1">
-             Siguiente <ArrowRight size={18} />
-           </button>
+           <div className="flex gap-4 items-center">
+             {!canAdvance && (
+                <span className="text-red-500 text-xs font-bold animate-pulse flex items-center gap-2">
+                  <ChevronDown size={14} className="animate-bounce"/> Baja para leer
+                </span>
+             )}
+             
+             <button 
+               onClick={() => setStep(s => s + 1)} 
+               className={`px-8 py-4 rounded-2xl font-bold shadow-xl flex items-center gap-3 text-sm uppercase tracking-wide transition-all transform hover:-translate-y-1
+                 ${canAdvance ? 'bg-slate-900 text-white hover:bg-red-600 hover:shadow-red-500/30' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}
+               `}
+             >
+               Siguiente <ArrowRight size={18} />
+             </button>
+           </div>
         </div>
       </div>
     </div>
   );
 
-  // --- PASOS ---
+  // --- PANTALLAS ---
 
   // 0. LOGIN
   if (step === 0) return (
     <div className="h-screen w-full flex items-center justify-center bg-slate-900 relative overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <img src="/img/portada.jpg" onError={(e) => e.currentTarget.src='https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070'} className="w-full h-full object-cover opacity-20" alt="Fondo" />
-        <div className="absolute inset-0 bg-slate-900/50"></div>
+        <img src="/img/portada.jpg" onError={(e) => e.currentTarget.src='https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070'} className="w-full h-full object-cover opacity-30" alt="Fondo" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-slate-900 via-slate-900/80 to-transparent"></div>
       </div>
       
-      <div className="relative z-10 w-full max-w-6xl h-full flex flex-col md:flex-row items-center justify-center p-6 gap-12">
-        <div className="text-center md:text-left space-y-6 flex-1">
-          <img src="/img/escudo.png" onError={(e) => e.currentTarget.style.display='none'} className="h-32 mx-auto md:mx-0 drop-shadow-xl opacity-90" alt="Escudo" />
+      <div className="relative z-10 w-full max-w-6xl h-full flex flex-col md:flex-row items-center justify-center p-8 gap-16">
+        <div className="text-center md:text-left space-y-8 flex-1">
+          <img src="/img/escudo.png" onError={(e) => e.currentTarget.style.display='none'} className="h-32 mx-auto md:mx-0 drop-shadow-2xl" alt="Escudo" />
           <div>
-            <h1 className="text-6xl md:text-8xl font-black text-white leading-none mb-2 tracking-tighter">INDUCCIÓN<br/><span className="text-red-600">MUNICIPAL</span></h1>
+            <h1 className="text-6xl md:text-8xl font-black text-white leading-none mb-2 tracking-tighter">INDUCCIÓN<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">MUNICIPAL</span></h1>
             <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-sm">Ilustre Municipalidad de La Serena</p>
           </div>
         </div>
         
-        <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl flex-1 border-4 border-slate-800">
-          <div className="space-y-4">
-            <h3 className="text-slate-900 font-black text-2xl mb-6 flex items-center gap-2 uppercase">Registro</h3>
-            <div className="grid grid-cols-2 gap-3">
-               <input className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-red-600 border border-slate-200" placeholder="Nombres" onChange={e => setUserData({...userData, nombres: e.target.value})} />
-               <input className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-red-600 border border-slate-200" placeholder="Apellidos" onChange={e => setUserData({...userData, apellidos: e.target.value})} />
+        <div className="w-full max-w-md bg-white/10 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-white/20 shadow-2xl flex-1">
+          <div className="space-y-5">
+            <h3 className="text-white font-bold text-2xl mb-6 flex items-center gap-3"><User className="text-red-500"/> Registro Funcionario</h3>
+            <div className="grid grid-cols-2 gap-4">
+               <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Nombres" onChange={e => setUserData({...userData, nombres: e.target.value})} />
+               <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Apellidos" onChange={e => setUserData({...userData, apellidos: e.target.value})} />
             </div>
-            <input className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-red-600 border border-slate-200" placeholder="RUT (12.345.678-9)" onChange={e => setUserData({...userData, rut: e.target.value})} />
+            <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="RUT" onChange={e => setUserData({...userData, rut: e.target.value})} />
             <div className="relative">
-              <select className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm appearance-none outline-none focus:ring-2 focus:ring-red-600 border border-slate-200 cursor-pointer" onChange={e => setUserData({...userData, dept: e.target.value})}>
+              <select className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-600 font-bold text-white text-sm appearance-none focus:border-red-500 outline-none cursor-pointer" onChange={e => setUserData({...userData, dept: e.target.value})}>
                 <option value="">Selecciona Unidad...</option>
                 {DEPARTAMENTOS.map((d, i) => <option key={i} value={d} className="text-slate-900">{d}</option>)}
               </select>
               <ChevronDown className="absolute right-4 top-4 text-slate-400 pointer-events-none" size={16}/>
             </div>
-            <input className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-red-600 border border-slate-200" placeholder="Cargo (Ej: Administrativo)" onChange={e => setUserData({...userData, cargo: e.target.value})} />
-            
-            <button disabled={!userData.nombres || !userData.rut || !userData.dept} onClick={goNext} className="w-full bg-red-600 text-white p-5 rounded-xl font-black tracking-widest hover:bg-red-700 transition-all shadow-lg flex justify-center gap-3 mt-6 items-center disabled:opacity-50 disabled:cursor-not-allowed uppercase text-sm">
-              Ingresar <ArrowRight size={20}/>
+            <input className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-600 font-bold text-white text-sm focus:border-red-500 outline-none" placeholder="Cargo" onChange={e => setUserData({...userData, cargo: e.target.value})} />
+            <button disabled={!userData.nombres || !userData.rut || !userData.dept} onClick={() => setStep(1)} className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white p-5 rounded-xl font-black tracking-wide hover:shadow-lg hover:shadow-red-900/50 flex justify-center gap-3 mt-6 items-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02]">
+              INICIAR <ArrowRight size={20}/>
             </button>
           </div>
         </div>
@@ -190,23 +221,22 @@ export default function App() {
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Mensaje de la Alcaldesa" 
       visual={
         <div className="w-full h-full bg-black flex items-center justify-center">
-           <iframe className="w-full h-full aspect-video" src="https://www.youtube.com/embed/EQUdyb-YVxM?rel=0&modestbranding=1" title="Mensaje Alcaldesa" frameBorder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+           <iframe className="w-full h-full aspect-video" src="https://www.youtube.com/embed/EQUdyb-YVxM?rel=0&modestbranding=1" title="Mensaje" frameBorder="0" allowFullScreen></iframe>
         </div>
       }
       content={
-        <div>
+        <div className="animate-in fade-in duration-700">
            <p className="font-black text-4xl text-slate-900 mb-6">¡Hola, {userData.nombres}!</p>
            <p className="mb-8 text-xl font-light text-slate-600">Te sumas a una institución con historia. La Serena no es solo la segunda ciudad más antigua de Chile; es una capital patrimonial que exige lo mejor de nosotros.</p>
-           <div className="bg-red-50 p-8 rounded-3xl border-l-8 border-red-600 mb-10">
-             <Quote className="text-red-400 mb-4" size={40}/>
+           <div className="bg-red-50 p-8 rounded-[2rem] border-l-8 border-red-600 mb-10 shadow-sm">
              <p className="text-2xl font-serif italic text-red-900 leading-relaxed">"Nuestro compromiso es modernizar la gestión municipal. Queremos funcionarios proactivos, empáticos y que entiendan que detrás de cada papel hay una familia."</p>
              <p className="text-right font-bold text-red-700 mt-4 text-sm uppercase">- Daniela Norambuena, Alcaldesa</p>
            </div>
            <p className="font-black text-slate-900 text-xl mb-6 uppercase tracking-wider">Tu ruta de aprendizaje:</p>
            <ul className="space-y-4">
-             <li className="flex items-center gap-4 text-lg bg-slate-50 p-4 rounded-xl"><div className="bg-green-100 p-2 rounded-full text-green-600"><CheckCircle size={20}/></div> Nuestra Misión y Valores.</li>
-             <li className="flex items-center gap-4 text-lg bg-slate-50 p-4 rounded-xl"><div className="bg-blue-100 p-2 rounded-full text-blue-600"><CheckCircle size={20}/></div> Estructura y Autoridades.</li>
-             <li className="flex items-center gap-4 text-lg bg-slate-50 p-4 rounded-xl"><div className="bg-yellow-100 p-2 rounded-full text-yellow-600"><CheckCircle size={20}/></div> Tus Derechos y Deberes.</li>
+             <li className="flex items-center gap-4 text-lg bg-white p-4 rounded-xl border border-slate-100 shadow-sm"><CheckCircle size={24} className="text-green-500"/> Nuestra Misión y Valores.</li>
+             <li className="flex items-center gap-4 text-lg bg-white p-4 rounded-xl border border-slate-100 shadow-sm"><CheckCircle size={24} className="text-blue-500"/> Estructura y Autoridades.</li>
+             <li className="flex items-center gap-4 text-lg bg-white p-4 rounded-xl border border-slate-100 shadow-sm"><CheckCircle size={24} className="text-yellow-500"/> Tus Derechos y Deberes.</li>
            </ul>
         </div>
       } 
@@ -214,15 +244,15 @@ export default function App() {
 
     case 2: return <ChapterLayout title="Carta de Navegación" subtitle="Misión, Visión y Valores" 
       visual={
-        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white p-8">
-           <div className="grid gap-8 w-full max-w-md">
-              <div className="bg-white/10 p-8 rounded-3xl border border-white/10">
-                 <div className="flex items-center gap-4 mb-4"><Lightbulb className="text-yellow-400" size={32}/> <h4 className="font-black text-3xl tracking-tight">MISIÓN</h4></div>
-                 <p className="text-slate-300 text-lg">Mejorar la calidad de vida de los habitantes de la comuna a través de una gestión participativa, inclusiva y transparente.</p>
+        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white p-12">
+           <div className="grid gap-8 w-full">
+              <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/10 shadow-xl">
+                 <div className="flex items-center gap-4 mb-4"><Star className="text-yellow-400" size={32}/> <h4 className="font-black text-3xl tracking-tight">MISIÓN</h4></div>
+                 <p className="text-slate-300 text-lg leading-relaxed">Mejorar la calidad de vida de los habitantes de la comuna a través de una gestión participativa, inclusiva y transparente.</p>
               </div>
-              <div className="bg-white/10 p-8 rounded-3xl border border-white/10">
-                 <div className="flex items-center gap-4 mb-4"><MapPin className="text-red-500" size={32}/> <h4 className="font-black text-3xl tracking-tight">VISIÓN</h4></div>
-                 <p className="text-slate-300 text-lg">Ser una comuna líder en desarrollo sostenible, turismo y patrimonio, reconocida por su calidad de vida.</p>
+              <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/10 shadow-xl">
+                 <div className="flex items-center gap-4 mb-4"><Map className="text-red-500" size={32}/> <h4 className="font-black text-3xl tracking-tight">VISIÓN</h4></div>
+                 <p className="text-slate-300 text-lg leading-relaxed">Ser una comuna líder en desarrollo sostenible, turismo y patrimonio, reconocida por su calidad de vida.</p>
               </div>
            </div>
         </div>
@@ -232,17 +262,17 @@ export default function App() {
           <p className="text-3xl font-light text-slate-500 mb-10">Para remar todos hacia el mismo lado, debemos tener clara nuestra brújula.</p>
           <h4 className="font-black text-slate-900 text-2xl mb-8 uppercase tracking-wide">Nuestros Valores Intransables:</h4>
           <div className="grid gap-6">
-             <div className="flex gap-6 items-start p-6 bg-slate-50 rounded-3xl border border-slate-100">
-               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-red-600 font-black text-3xl shrink-0 shadow-md border border-slate-100">1</div>
-               <div><h4 className="font-black text-slate-900 text-xl mb-2">Probidad</h4><p className="text-slate-600 text-lg">Actuamos con rectitud intachable. Los recursos municipales son sagrados y pertenecen a todos los vecinos.</p></div>
+             <div className="flex gap-6 items-start p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+               <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 font-black text-3xl shrink-0">1</div>
+               <div><h4 className="font-black text-slate-900 text-xl mb-2">Probidad</h4><p className="text-slate-600 text-lg">Actuamos con rectitud intachable. Los recursos municipales son sagrados.</p></div>
              </div>
-             <div className="flex gap-6 items-start p-6 bg-slate-50 rounded-3xl border border-slate-100">
-               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-blue-600 font-black text-3xl shrink-0 shadow-md border border-slate-100">2</div>
+             <div className="flex gap-6 items-start p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+               <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 font-black text-3xl shrink-0">2</div>
                <div><h4 className="font-black text-slate-900 text-xl mb-2">Cercanía</h4><p className="text-slate-600 text-lg">No somos burócratas, somos servidores públicos. Empatizamos con el problema del otro.</p></div>
              </div>
-             <div className="flex gap-6 items-start p-6 bg-slate-50 rounded-3xl border border-slate-100">
-               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-green-600 font-black text-3xl shrink-0 shadow-md border border-slate-100">3</div>
-               <div><h4 className="font-black text-slate-900 text-xl mb-2">Transparencia</h4><p className="text-slate-600 text-lg">Nuestros actos son públicos. Informamos con claridad y oportundidad a la comunidad.</p></div>
+             <div className="flex gap-6 items-start p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+               <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-green-600 font-black text-3xl shrink-0">3</div>
+               <div><h4 className="font-black text-slate-900 text-xl mb-2">Transparencia</h4><p className="text-slate-600 text-lg">Nuestros actos son públicos. Informamos con claridad a la comunidad.</p></div>
              </div>
           </div>
         </>
@@ -251,10 +281,10 @@ export default function App() {
     
     case 3: return <ChapterLayout title="Concejo Municipal" subtitle="El Equipo Fiscalizador" 
       visual={
-        <div className="h-full w-full bg-slate-100 p-8 overflow-y-auto">
+        <div className="h-full w-full bg-slate-100 p-8 overflow-y-auto rounded-[2rem]">
             <div className="grid grid-cols-2 gap-4">
             {CONCEJALES.map((name, i) => (
-               <div key={i} className="bg-white p-4 rounded-3xl shadow-sm flex flex-col items-center text-center border border-slate-200">
+               <div key={i} className="bg-white p-4 rounded-3xl shadow-sm hover:shadow-xl transition-all flex flex-col items-center text-center border border-slate-200">
                  <div className="w-20 h-20 bg-slate-200 rounded-full mb-4 overflow-hidden border-4 border-white shadow-sm">
                    <img src={`/img/concejal_${i+1}.jpg`} onError={(e) => e.currentTarget.style.display='none'} className="w-full h-full object-cover" alt="Foto"/>
                    <User className="w-full h-full p-4 text-slate-300" />
@@ -274,15 +304,15 @@ export default function App() {
              <ul className="space-y-6">
                <li className="flex gap-4 items-start">
                  <div className="bg-yellow-200 p-1 rounded-full mt-1"><CheckCircle size={20} className="text-yellow-800"/></div>
-                 <div><strong className="text-lg text-yellow-900 block font-black uppercase">Normar</strong>Aprueban las ordenanzas que rigen la comuna (aseo, ruidos, tránsito).</div>
+                 <div><strong className="text-lg text-yellow-900 block font-black uppercase">Normar</strong>Aprueban las ordenanzas que rigen la comuna.</div>
                </li>
                <li className="flex gap-4 items-start">
                  <div className="bg-yellow-200 p-1 rounded-full mt-1"><CheckCircle size={20} className="text-yellow-800"/></div>
-                 <div><strong className="text-lg text-yellow-900 block font-black uppercase">Fiscalizar</strong>Revisan que el presupuesto municipal se gaste de forma correcta y legal.</div>
+                 <div><strong className="text-lg text-yellow-900 block font-black uppercase">Fiscalizar</strong>Revisan que el presupuesto municipal se gaste de forma correcta.</div>
                </li>
                <li className="flex gap-4 items-start">
                  <div className="bg-yellow-200 p-1 rounded-full mt-1"><CheckCircle size={20} className="text-yellow-800"/></div>
-                 <div><strong className="text-lg text-yellow-900 block font-black uppercase">Resolver</strong>Aprueban materias claves como el Plan Regulador y licitaciones.</div>
+                 <div><strong className="text-lg text-yellow-900 block font-black uppercase">Resolver</strong>Aprueban materias claves como licitaciones.</div>
                </li>
              </ul>
           </div>
@@ -291,23 +321,23 @@ export default function App() {
     />;
 
     case 4: return <ChapterLayout title="Organigrama" subtitle="Nuestra Estructura" 
-      visual={<div className="flex items-center justify-center h-full bg-slate-100 p-8"><img src="/img/organigrama_full.png" onError={(e) => e.currentTarget.src='https://placehold.co/1000x1200/png?text=Mapa+Estructural'} className="max-h-full max-w-full object-contain" /></div>}
+      visual={<div className="flex items-center justify-center h-full bg-slate-100 p-8 rounded-[2rem]"><img src="/img/organigrama_full.png" onError={(e) => e.currentTarget.src='https://placehold.co/1000x1200/png?text=Mapa+Estructural'} className="max-h-full max-w-full object-contain drop-shadow-2xl" /></div>}
       content={
         <>
-          <p className="mb-8 text-xl font-light">Somos una institución grande y compleja. Entender el organigrama es vital para saber a quién acudir y respetar los conductos regulares.</p>
+          <p className="mb-8 text-xl font-light">Somos una institución grande y compleja. Entender el organigrama es vital para saber a quién acudir.</p>
           <h4 className="font-black text-slate-900 text-2xl mb-6 uppercase tracking-wide">Direcciones Clave:</h4>
           <div className="grid gap-6">
-             <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl">
+             <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl hover:border-red-200 transition-colors">
                 <div className="bg-red-100 p-4 rounded-2xl text-red-600 shrink-0"><Heart size={32}/></div>
-                <div><h4 className="font-black text-slate-900 text-xl">DIDECO (Desarrollo Comunitario)</h4><p className="text-lg text-slate-500 mt-2">El "corazón social". Gestiona ayudas sociales, organizaciones comunitarias y subsidios.</p></div>
+                <div><h4 className="font-black text-slate-900 text-xl">DIDECO</h4><p className="text-lg text-slate-500 mt-2">El "corazón social". Gestiona ayudas sociales y organizaciones comunitarias.</p></div>
              </div>
-             <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl">
-                <div className="bg-blue-100 p-4 rounded-2xl text-blue-600 shrink-0"><Building2 size={32}/></div>
-                <div><h4 className="font-black text-slate-900 text-xl">DOM (Obras Municipales)</h4><p className="text-lg text-slate-500 mt-2">El brazo técnico. Otorga permisos de edificación, recepciones finales y fiscaliza construcciones.</p></div>
+             <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl hover:border-blue-200 transition-colors">
+                <div className="bg-blue-100 p-4 rounded-2xl text-blue-600 shrink-0"><Shield size={32}/></div>
+                <div><h4 className="font-black text-slate-900 text-xl">DOM (Obras)</h4><p className="text-lg text-slate-500 mt-2">El brazo técnico. Otorga permisos de edificación.</p></div>
              </div>
-             <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl">
+             <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl hover:border-green-200 transition-colors">
                 <div className="bg-green-100 p-4 rounded-2xl text-green-600 shrink-0"><Map size={32}/></div>
-                <div><h4 className="font-black text-slate-900 text-xl">SECPLAN (Planificación)</h4><p className="text-lg text-slate-500 mt-2">El "cerebro". Diseña los proyectos de inversión (plazas, pavimentos, estadios).</p></div>
+                <div><h4 className="font-black text-slate-900 text-xl">SECPLAN</h4><p className="text-lg text-slate-500 mt-2">El "cerebro". Diseña los proyectos de inversión.</p></div>
              </div>
           </div>
         </>
@@ -316,12 +346,12 @@ export default function App() {
 
     case 5: return <ChapterLayout title="Ecosistema" subtitle="Mapa de Públicos" 
       visual={
-        <div className="relative w-full h-full flex items-center justify-center bg-slate-900 overflow-hidden rounded-2xl">
+        <div className="relative w-full h-full flex items-center justify-center bg-slate-900 overflow-hidden rounded-[2rem]">
            <div className="absolute w-[600px] h-[600px] border border-slate-700 rounded-full opacity-30"></div>
            <div className="z-20 bg-white text-slate-900 w-32 h-32 rounded-full flex items-center justify-center font-black text-2xl shadow-[0_0_50px_white]">IMLS</div>
            <div className="absolute top-[15%] left-[20%] bg-blue-500/20 p-4 rounded-xl border border-blue-500/50 flex flex-col items-center gap-2"><User className="text-blue-400" size={32}/><span className="text-sm font-bold text-blue-200 uppercase">Vecinos</span></div>
            <div className="absolute bottom-[20%] right-[15%] bg-green-500/20 p-4 rounded-xl border border-green-500/50 flex flex-col items-center gap-2"><Briefcase className="text-green-400" size={32}/><span className="text-sm font-bold text-green-200 uppercase">Empresas</span></div>
-           <div className="absolute top-[20%] right-[20%] bg-purple-500/20 p-4 rounded-xl border border-purple-500/50 flex flex-col items-center gap-2"><Building2 className="text-purple-400" size={32}/><span className="text-sm font-bold text-purple-200 uppercase">Gobierno</span></div>
+           <div className="absolute top-[20%] right-[20%] bg-purple-500/20 p-4 rounded-xl border border-purple-500/50 flex flex-col items-center gap-2"><Shield className="text-purple-400" size={32}/><span className="text-sm font-bold text-purple-200 uppercase">Gobierno</span></div>
         </div>
       }
       content={
@@ -345,7 +375,7 @@ export default function App() {
       } 
     />;
 
-    case 6: return <ChapterLayout title="Remuneraciones" subtitle="Somos un Solo Equipo" visual={<div className="flex items-center justify-center h-full bg-green-50 rounded-2xl"><DollarSign size={200} className="text-green-600/50" /></div>} 
+    case 6: return <ChapterLayout title="Remuneraciones" subtitle="Somos un Solo Equipo" visual={<div className="flex items-center justify-center h-full bg-green-50 rounded-[2rem]"><DollarSign size={200} className="text-green-600/50" /></div>} 
       content={
         <>
           <p className="mb-8 text-2xl font-light">En el municipio conviven distintas modalidades contractuales, pero quiero que sepas algo: <strong>todos somos compañeros de trabajo</strong> con la misma camiseta.</p>
@@ -362,17 +392,14 @@ export default function App() {
                  <strong className="text-slate-900 font-black uppercase tracking-wide text-lg">Honorarios</strong>
                  <span className="text-xs bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full font-bold uppercase">Código Civil</span>
                </div>
-               <p className="text-slate-600 text-lg">Prestadores de servicios. La fecha de pago es variable (generalmente primeros días del mes siguiente) y depende de la entrega oportuna del <strong>Informe de Actividades</strong>.</p>
+               <p className="text-slate-600 text-lg">Prestadores de servicios. La fecha de pago es variable y depende del <strong>Informe de Actividades</strong>.</p>
              </div>
-          </div>
-          <div className="mt-10 p-6 bg-slate-50 rounded-2xl border-l-8 border-slate-300">
-             <p className="text-lg italic text-slate-500 font-serif">"La calidad jurídica no define tu valor como persona ni tu aporte a la ciudad. El respeto es transversal."</p>
           </div>
         </>
       } 
     />;
 
-    case 7: return <ChapterLayout title="Ley Karin" subtitle="Dignidad y Respeto" visual={<div className="flex items-center justify-center h-full bg-pink-50 rounded-2xl"><Heart size={200} className="text-pink-400/50" /></div>} 
+    case 7: return <ChapterLayout title="Ley Karin" subtitle="Dignidad y Respeto" visual={<div className="flex items-center justify-center h-full bg-pink-50 rounded-[2rem]"><Heart size={200} className="text-pink-400/50" /></div>} 
       content={
         <>
           <p className="mb-8 text-2xl font-light">La <strong>Ley N° 21.643</strong> establece un nuevo estándar. Tenemos <strong>Tolerancia Cero</strong> con:</p>
@@ -392,19 +419,19 @@ export default function App() {
           </div>
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
             <h5 className="font-black text-slate-900 text-xl mb-3">¿Qué cambia?</h5>
-            <p className="text-slate-600 text-lg">Ya no necesitas demostrar que el acoso fue "reiterado". <strong>Un solo acto grave es suficiente</strong> para denunciar. El municipio cuenta con protocolos estrictos y confidenciales para protegerte.</p>
+            <p className="text-slate-600 text-lg">Ya no necesitas demostrar que el acoso fue "reiterado". <strong>Un solo acto grave es suficiente</strong> para denunciar.</p>
           </div>
         </>
       } 
     />;
 
-    case 8: return <ChapterLayout title="Seguridad Laboral" subtitle="Tu vida es primero" visual={<div className="flex items-center justify-center h-full bg-yellow-50 rounded-2xl"><Shield size={200} className="text-yellow-500/50" /></div>} 
+    case 8: return <ChapterLayout title="Seguridad Laboral" subtitle="Tu vida es primero" visual={<div className="flex items-center justify-center h-full bg-yellow-50 rounded-[2rem]"><Shield size={200} className="text-yellow-500/50" /></div>} 
       content={
         <>
           <p className="mb-8 text-2xl font-light">Trabajar seguros es responsabilidad de todos. Aquí tienes las reglas de oro que pueden salvarte la vida.</p>
           <div className="space-y-8">
              <div className="flex gap-6 items-start">
-               <div className="bg-blue-100 p-4 rounded-2xl text-blue-600 shrink-0"><MapPin size={32}/></div>
+               <div className="bg-blue-100 p-4 rounded-2xl text-blue-600 shrink-0"><Map size={32}/></div>
                <div>
                  <h4 className="font-black text-slate-900 text-2xl mb-2">Zona de Tsunamis</h4>
                  <p className="text-slate-600 text-lg">La Serena es costera. Ante un sismo fuerte, evacúa inmediatamente hacia la <strong>Cota 30</strong> (Desde Av. Cisternas hacia arriba).</p>
@@ -414,12 +441,11 @@ export default function App() {
                <div className="bg-red-100 p-4 rounded-2xl text-red-600 shrink-0"><AlertCircle size={32}/></div>
                <div>
                  <h4 className="font-black text-slate-900 text-2xl mb-2">Accidentes Laborales</h4>
-                 <p className="text-slate-600 text-lg mb-4">Si te lesionas trabajando o en el trayecto directo casa-trabajo:</p>
                  <div className="bg-red-50 p-6 rounded-2xl text-lg font-bold text-red-800 border border-red-100">
                     <ol className="list-decimal ml-6 space-y-2">
                       <li>AVISAR INMEDIATAMENTE a tu jefatura.</li>
                       <li>Acudir a la ACHS.</li>
-                      <li>No irse a casa sin registro (pierdes la cobertura).</li>
+                      <li>No irse a casa sin registro.</li>
                     </ol>
                  </div>
                </div>
@@ -466,7 +492,7 @@ export default function App() {
                {quizState !== 'waiting' && (
                  <div className={`mt-8 p-6 rounded-2xl ${quizState === 'correct' ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900'} shadow-inner`}>
                     <p className="font-black text-lg mb-2 flex items-center gap-2">
-                      {quizState === 'correct' ? <><CheckCircle size={24}/> ¡Excelente!</> : <><XCircle size={24}/> Corrección:</>}
+                      {quizState === 'correct' ? <><CheckCircle size={24}/> ¡Excelente!</> : <><CheckCircle size={24}/> Corrección:</>}
                     </p>
                     <p className="text-base mb-6 font-medium leading-relaxed">{QUESTIONS[quizIndex].explanation}</p>
                     <button onClick={nextQuestion} className={`w-full py-4 rounded-xl font-black text-white text-lg shadow-xl ${quizState === 'correct' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>
@@ -528,7 +554,7 @@ export default function App() {
                <div className="flex items-center justify-center gap-2 text-slate-900 font-bold text-sm bg-slate-100 rounded-full px-4 py-2 inline-block mb-2">
                  <Clock size={14}/> {currentTime.toLocaleTimeString()}
                </div>
-               <p className="font-bold text-slate-900 text-sm">{today}</p>
+               <p className="font-bold text-slate-900 text-sm">{currentTime.toLocaleDateString()}</p>
             </div>
 
             <div className="text-center flex-1">
@@ -544,14 +570,14 @@ export default function App() {
            <button onClick={printCertificate} className="bg-white text-slate-900 px-6 py-4 rounded-full font-bold shadow-xl hover:bg-slate-100 transition-all flex items-center gap-2">
              <Printer size={20}/> Descargar
            </button>
-           <button onClick={goNext} className="bg-red-600 text-white px-8 py-4 rounded-full font-bold shadow-xl hover:bg-red-700 transition-all flex items-center gap-2 animate-bounce">
+           <button onClick={() => setStep(11)} className="bg-red-600 text-white px-8 py-4 rounded-full font-bold shadow-xl hover:bg-red-700 transition-all flex items-center gap-2 animate-bounce">
              Siguiente <ArrowRight size={20}/>
            </button>
         </div>
       </div>
     );
 
-    // 11. COMUNIDAD (FINAL)
+    // 11. COMUNIDAD
     case 11: return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 relative overflow-hidden text-center text-white font-sans">
         <div className="absolute inset-0 bg-[url('/img/portada.jpg')] opacity-20 bg-cover"></div>
