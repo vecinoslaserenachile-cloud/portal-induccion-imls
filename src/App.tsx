@@ -7,10 +7,10 @@ import {
   ArrowRight, Play, Radio, MessageCircle, Zap, 
   HeartHandshake, Smile, Activity, Stethoscope, AlertTriangle, Star, 
   Target, Users, Landmark, MapPin, Search, GraduationCap, Phone, 
-  Eye, Info, HardHat, BookOpen
+  Eye, Info, HardHat, BookOpen, Globe
 } from 'lucide-react';
 
-// --- DATOS MUNICIPALES ---
+// --- CONFIGURACIÓN DE DEPARTAMENTOS ---
 const DEPARTAMENTOS = ["Alcaldía", "Administración Municipal", "Secretaría Municipal", "SECPLAN", "DIDECO", "Dirección de Obras (DOM)", "Gestión de Personas", "Seguridad Ciudadana", "Tránsito", "Turismo y Patrimonio", "Servicio a la Comunidad", "Salud", "Educación"];
 
 const CONCEJALES = ["Cristian Marín", "Rayen Pojomovsky", "Alejandro Astudillo", "Gladys Marín", "Francisca Barahona", "María Teresita Prouvay", "Camilo Araya", "María Marcela Damke", "Matías Espinosa", "Luisa Jinete"];
@@ -23,46 +23,40 @@ const QUESTIONS = [
   { q: "¿Organismo de seguridad laboral?", options: ["ACHS", "Mutual de Seguridad", "ISL"], ans: 1, explanation: "Estamos adheridos a la Mutual de Seguridad CChC." },
   { q: "¿Dónde evacuar por Tsunami?", options: ["Al Faro", "Cota 30 (Av. Cisternas)", "Playa"], ans: 1, explanation: "Siempre hacia la zona de seguridad sobre la Cota 30." },
   { q: "¿Quién diseña proyectos Smart City?", options: ["SECPLAN", "DIDECO", "Tránsito"], ans: 0, explanation: "SECPLAN es el cerebro técnico de la planificación." },
-  { q: "¿Rol del Concejo Municipal?", options: ["Ejecutar obras", "Fiscalizar y Normar", "Atender"], ans: 1, explanation: "Fiscalizan la gestión y aprueban normas locales." },
+  { q: "¿Qué es RDMLS?", options: ["Una oficina", "Radio Digital Municipal", "Un parque"], ans: 1, explanation: "La Radio Digital Municipal, nuestra voz oficial." },
   { q: "¿Valor intransable?", options: ["Rapidez", "Probidad", "Simpatía"], ans: 1, explanation: "La Probidad es la base ética de nuestra función." },
   { q: "¿Qué hacer al terminar?", options: ["Irse", "Unirse a la Comunidad Digital", "Nada"], ans: 1, explanation: "¡Bienvenido! Súmate a nuestras redes y portales." },
 ];
 
-// --- COMPONENTE DE VIDEO (ESTE ES EL QUE FUNCIONA) ---
+// --- COMPONENTE DE VIDEO SEGURO ---
 const VideoPlayer = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  if (isPlaying) {
-    return (
-      <div className="w-full h-full bg-black rounded-[2rem] overflow-hidden shadow-2xl animate-in fade-in">
+  const [active, setActive] = useState(false);
+  return (
+    <div className="w-full h-full bg-slate-900 relative rounded-[2rem] overflow-hidden shadow-2xl flex items-center justify-center border border-white/10 group cursor-pointer ring-4 ring-black/20" onClick={() => setActive(true)}>
+      {!active ? (
+        <>
+          <img src="https://img.youtube.com/vi/EQUdyb-YVxM/maxresdefault.jpg" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" alt="Portada Video" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+          <div className="relative z-10 flex flex-col items-center gap-6">
+            <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(220,38,38,0.6)] animate-pulse group-hover:scale-110 transition-transform">
+              <Play size={40} fill="white" className="ml-2 text-white"/>
+            </div>
+            <div className="text-center">
+              <p className="text-white font-black uppercase tracking-[0.2em] text-2xl drop-shadow-lg">Mensaje Alcaldesa</p>
+              <p className="text-slate-300 text-sm font-light mt-2">Haz clic para iniciar</p>
+            </div>
+          </div>
+        </>
+      ) : (
         <iframe 
           className="w-full h-full" 
-          src="https://www.youtube.com/embed/EQUdyb-YVxM?autoplay=1&rel=0&modestbranding=1&playsinline=1" 
+          src="https://www.youtube.com/embed/EQUdyb-YVxM?autoplay=1&rel=0&modestbranding=1" 
           title="Mensaje Alcaldesa" 
           frameBorder="0" 
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
           allowFullScreen
         ></iframe>
-      </div>
-    );
-  }
-
-  return (
-    <div 
-      className="w-full h-full relative cursor-pointer group rounded-[2rem] overflow-hidden shadow-2xl bg-black flex items-center justify-center border border-white/20"
-      onClick={() => setIsPlaying(true)}
-    >
-      <img 
-        src="https://img.youtube.com/vi/EQUdyb-YVxM/maxresdefault.jpg" 
-        className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500"
-        alt="Portada"
-      />
-      <div className="relative z-10 flex flex-col items-center justify-center gap-4">
-        <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(220,38,38,0.6)] group-hover:scale-110 transition-transform duration-300">
-          <Play size={40} fill="white" className="text-white ml-2" />
-        </div>
-        <p className="text-white font-black text-xl tracking-widest uppercase bg-black/50 px-6 py-2 rounded-full backdrop-blur-md">VER SALUDO</p>
-      </div>
+      )}
     </div>
   );
 };
@@ -70,12 +64,12 @@ const VideoPlayer = () => {
 // --- APP PRINCIPAL ---
 export default function App() {
   const [step, setStep] = useState(0); 
-  // AUTOCOMPLETADO
   const [userData, setUserData] = useState({ 
     nombres: 'Rodrigo', apellidos: 'Godoy', rut: '12.345.678-9', 
     dept: 'SECPLAN', cargo: 'Director de Innovación', email: 'rodrigo.godoy@laserena.cl' 
   });
   const [canAdvance, setCanAdvance] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   
   // Quiz
   const [quizIndex, setQuizIndex] = useState(0);
@@ -86,30 +80,34 @@ export default function App() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Desbloqueo en pasos que no requieren lectura
-    if ([0, 1, 11, 12].includes(step)) {
-      setCanAdvance(true);
-    } else {
-      setCanAdvance(false);
-      // Auto-desbloqueo de emergencia
-      setTimeout(() => {
-        if (scrollRef.current && scrollRef.current.scrollHeight <= scrollRef.current.clientHeight + 50) {
-          setCanAdvance(true);
-        }
-      }, 1000);
-    }
-    // Reset Scroll
-    window.scrollTo(0, 0);
-    if(scrollRef.current) scrollRef.current.scrollTop = 0;
-  }, [step]);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  // SCROLL HANDLER
+  // Scroll Checker
   const handleScroll = (e: any) => {
     const el = e.target;
     if (el.scrollHeight - el.scrollTop <= el.clientHeight + 100) {
       setCanAdvance(true);
     }
   };
+
+  useEffect(() => {
+    // Pasos libres
+    if ([0, 1, 11, 12].includes(step)) {
+      setCanAdvance(true);
+    } else {
+      setCanAdvance(false);
+      setTimeout(() => {
+        if (scrollRef.current && scrollRef.current.scrollHeight <= scrollRef.current.clientHeight + 50) {
+          setCanAdvance(true);
+        }
+      }, 1000);
+    }
+    // Scroll reset
+    window.scrollTo(0, 0);
+    if(scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [step]);
 
   const goNext = () => canAdvance && setStep(s => Math.min(s + 1, 12));
   const goBack = () => setStep(s => Math.max(0, s - 1));
@@ -124,31 +122,26 @@ export default function App() {
     }
   };
 
-  const printCertificate = () => window.print();
-
   // --- LAYOUT ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="flex flex-col h-[100dvh] w-full bg-slate-950 text-slate-100 font-sans overflow-hidden">
       
-      {/* Barra Progreso */}
       <div className="fixed top-0 left-0 w-full h-1.5 bg-slate-800 z-[100]">
         <div className="h-full bg-gradient-to-r from-red-600 to-orange-500 shadow-[0_0_20px_red] transition-all duration-700" style={{ width: `${(step / 12) * 100}%` }}></div>
       </div>
       
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* VISUAL */}
         <div className="w-full lg:w-1/2 h-[35vh] lg:h-full bg-slate-900 flex items-center justify-center p-4 lg:p-12 relative border-b lg:border-b-0 lg:border-r border-white/5 z-10">
            <div className="w-full h-full lg:rounded-[3rem] overflow-hidden shadow-2xl bg-black border border-white/10 flex items-center justify-center relative">
              {visual}
            </div>
         </div>
 
-        {/* CONTENIDO SCROLLABLE */}
         <div className="w-full lg:w-1/2 flex flex-col h-[65vh] lg:h-full bg-slate-950 overflow-hidden relative z-20">
           <div className="px-8 lg:px-16 pt-10 pb-6 shrink-0 border-b border-white/5 bg-slate-950/95 backdrop-blur-md">
              <div className="flex items-center gap-3 mb-2">
                 <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">PASO {step}</span>
-                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest pl-2">INDUCCIÓN 2026</span>
+                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest pl-2">INDUCCIÓN IMLS</span>
              </div>
              <h2 className="text-3xl lg:text-6xl font-black text-white leading-none tracking-tighter uppercase italic mb-1">{title}</h2>
              <h3 className="text-lg lg:text-2xl text-slate-400 font-serif italic">{subtitle}</h3>
@@ -162,7 +155,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* FOOTER NAVEGACIÓN */}
       <div className="h-24 lg:h-28 shrink-0 bg-slate-900/95 backdrop-blur-xl border-t border-white/10 px-8 lg:px-20 flex items-center justify-between z-50 absolute bottom-0 w-full shadow-2xl">
           <button onClick={goBack} className="text-slate-500 hover:text-white font-bold text-xs uppercase flex items-center gap-2 p-4 transition-colors">
             <ChevronLeft size={20}/> ATRÁS
@@ -192,12 +184,12 @@ export default function App() {
   // --- PASO 0: LOGIN ---
   if (step === 0) return (
     <div className="h-screen w-full flex items-center justify-center bg-slate-950 relative overflow-hidden font-sans">
-      <div className="absolute inset-0 bg-[url('/img/portada.jpg')] bg-cover opacity-30 blur-sm scale-110"></div>
+      <div className="absolute inset-0 bg-[url('/img/portada.jpg')] bg-cover opacity-30 blur-md scale-110"></div>
       <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900/90 to-transparent"></div>
       
       <div className="relative z-10 w-full max-w-7xl flex flex-col md:flex-row items-center p-8 gap-16">
-        <div className="text-center md:text-left space-y-8 flex-1">
-          <img src="/img/escudo.png" className="h-32 lg:h-48 mx-auto md:mx-0 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]" />
+        <div className="text-center md:text-left space-y-8 flex-1 animate-in slide-in-from-left-10 duration-1000">
+          <img src="/img/escudo.png" className="h-32 lg:h-48 mx-auto md:mx-0 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]" onError={(e) => e.currentTarget.style.display='none'} />
           <h1 className="text-6xl lg:text-[8rem] font-black text-white leading-[0.8] tracking-tighter uppercase italic">INDUCCIÓN<br/><span className="text-red-600 font-normal italic">IMLS 2026</span></h1>
           <p className="text-slate-400 font-bold uppercase tracking-[0.5em] text-xs pl-4 border-l-4 border-red-600 mt-6">Smart City • Patrimonio</p>
         </div>
@@ -223,27 +215,27 @@ export default function App() {
   switch (step) {
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Daniela Norambuena, Alcaldesa" 
       visual={<VideoPlayer />}
-      content={<><p className="font-black text-5xl text-white mb-8 italic tracking-tighter">¡Hola, {userData.nombres}!</p><p>Te damos la bienvenida a la **Ilustre Municipalidad de La Serena**. Te sumas a una institución con más de 480 años de historia, pero con una visión de futuro moderna e innovadora.</p><div className="bg-red-600/20 p-8 rounded-3xl border-l-4 border-red-600 italic text-xl text-red-100">"Nuestra gestión pone al vecino en el centro. Buscamos funcionarios proactivos, empáticos y modernos."</div><p className="text-slate-400 text-sm mt-4">Haz clic en el video de la izquierda para ver el saludo.</p></>} 
+      content={<><p className="font-black text-5xl text-white mb-8 italic tracking-tighter">¡Hola, {userData.nombres}!</p><p>Te damos la bienvenida a la **Ilustre Municipalidad de La Serena**. Te sumas a una institución con más de 480 años de historia, pero con una visión de futuro moderna e innovadora.</p><div className="bg-red-600/20 p-8 rounded-3xl border-l-4 border-red-600 italic text-xl text-red-100">"Nuestra gestión pone al vecino en el centro. Buscamos funcionarios proactivos, empáticos y modernos."</div><p className="text-slate-400 text-sm mt-4">Haz clic en la imagen para ver el saludo oficial.</p></>} 
     />;
 
     case 2: return <ChapterLayout title="Estrategia" subtitle="Misión y Visión" 
       visual={<div className="flex flex-col gap-10 items-center p-12 text-center"><Target size={140} className="text-red-600 animate-pulse"/><h4 className="font-black text-6xl uppercase tracking-tighter text-white leading-none italic">RUMBO<br/>2026</h4></div>}
-      content={<><section className="space-y-4"><h4 className="text-red-500 font-black text-3xl uppercase tracking-widest flex items-center gap-3 border-b border-white/10 pb-4"><Star/> Misión</h4><p className="font-light text-xl">Administrar la comuna asegurando la participación de la comunidad en su progreso. Entregar servicios de alta calidad, con eficiencia, transparencia y calidez humana.</p></section><section className="space-y-4 pt-10"><h4 className="text-orange-500 font-black text-3xl uppercase tracking-widest flex items-center gap-3 border-b border-white/10 pb-4"><Landmark/> Visión</h4><p className="font-light text-xl">Ser una comuna líder en desarrollo sostenible y Smart City, reconocida por su respeto al patrimonio y por brindar calidad de vida.</p></section></>} 
+      content={<><section className="space-y-4"><h4 className="text-red-500 font-black text-2xl uppercase tracking-widest flex items-center gap-3 border-b border-white/10 pb-4"><Star/> Misión</h4><p className="font-light text-xl">Administrar la comuna asegurando la participación de la comunidad en su progreso. Entregar servicios de alta calidad, con eficiencia, transparencia y calidez humana.</p></section><section className="space-y-4 pt-10"><h4 className="text-orange-500 font-black text-2xl uppercase tracking-widest flex items-center gap-3 border-b border-white/10 pb-4"><Landmark/> Visión</h4><p className="font-light text-xl">Ser una comuna líder en desarrollo sostenible y Smart City, reconocida por su respeto al patrimonio y por brindar calidad de vida.</p></section></>} 
     />;
 
     case 3: return <ChapterLayout title="Concejo" subtitle="Fiscalización y Democracia" 
-      visual={<div className="grid grid-cols-2 gap-4 p-6 w-full h-full overflow-y-auto">{CONCEJALES.map(c => <div key={c} className="bg-white/5 p-4 rounded-2xl border border-white/10 text-center text-[10px] font-black uppercase flex flex-col items-center justify-center hover:bg-red-600 transition-colors"><User size={24} className="mb-2 text-red-500 group-hover:text-white"/><span className="text-white">{c}</span></div>)}</div>}
+      visual={<div className="grid grid-cols-2 gap-4 p-6 w-full h-full overflow-y-auto content-start">{CONCEJALES.map(c => <div key={c} className="bg-white/5 p-4 rounded-2xl border border-white/10 text-center text-[10px] font-black uppercase flex flex-col items-center justify-center hover:bg-red-600 transition-colors shadow-lg"><User size={24} className="mb-2 text-red-500 group-hover:text-white"/><span className="text-white">{c}</span></div>)}</div>}
       content={<><p>El **Concejo Municipal** fiscaliza la gestión y aprueba normas locales. Está compuesto por 10 concejales electos.</p><div className="bg-yellow-500/10 p-8 rounded-3xl border border-yellow-500/20 space-y-6 mt-4"><h4 className="text-yellow-500 font-black text-2xl uppercase flex items-center gap-4 italic"><Shield/> Funciones</h4><ul className="space-y-4 font-light text-lg"><li>• Fiscalizar planes y programas.</li><li>• Aprobar el presupuesto anual.</li><li>• Dictar ordenanzas comunales.</li></ul></div></>} 
     />;
 
     case 4: return <ChapterLayout title="Estructura" subtitle="Direcciones Municipales" 
-      visual={<div className="flex items-center justify-center p-8"><img src="/img/organigrama_full.png" className="max-h-full object-contain" onError={(e) => e.currentTarget.src='https://placehold.co/600x800/111/fff?text=Organigrama'}/></div>}
-      content={<><p className="text-3xl font-black text-white italic border-l-4 border-red-600 pl-4 uppercase tracking-tighter mb-8">Red de Servicio:</p><div className="grid gap-4">{DEPARTAMENTOS.slice(0, 6).map((d, i) => (<div key={i} className="p-6 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all"><h4 className="font-black text-white uppercase text-xl">{d.name}</h4><p className="text-slate-400 text-sm mt-1">{d.desc}</p></div>))}</div></>} 
+      visual={<div className="flex items-center justify-center p-8"><img src="/img/organigrama_full.png" className="max-h-full object-contain drop-shadow-[0_0_50px_rgba(255,255,255,0.1)]" onError={(e) => e.currentTarget.src='https://placehold.co/600x800/111/fff?text=Organigrama'}/></div>}
+      content={<><p className="text-3xl font-black text-white italic border-l-4 border-red-600 pl-4 uppercase tracking-tighter mb-8">Red de Servicio:</p><div className="grid gap-4 mt-6">{DEPARTAMENTOS.slice(0, 6).map((d, i) => (<div key={i} className="p-6 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all"><h4 className="font-black text-white uppercase text-xl">{d.name}</h4><p className="text-slate-400 text-sm mt-1">{d.desc}</p></div>))}</div></>} 
     />;
 
     case 5: return <ChapterLayout title="Smart City" subtitle="Ecosistema Digital" 
       visual={<div className="w-full h-full flex flex-col items-center justify-center p-8"><div className="bg-white text-slate-950 font-black p-10 rounded-full mb-10 text-4xl shadow-2xl">IMLS</div><div className="flex gap-6 w-full justify-center"><div className="bg-blue-600/30 p-6 rounded-3xl border border-blue-500/50 flex flex-col items-center gap-2 w-1/2"><Users size={30}/><span className="font-black uppercase text-xs">VECINOS</span></div><div className="bg-green-600/30 p-6 rounded-3xl border border-green-500/50 flex flex-col items-center gap-2 w-1/2"><Landmark size={30}/><span className="font-black uppercase text-xs">ESTADO</span></div></div></div>}
-      content={<><p className="text-3xl font-bold text-white uppercase italic tracking-tighter mb-6">Tecnología al Servicio.</p><p className="text-xl font-light leading-relaxed">No somos una isla. La IMLS interactúa con un ecosistema complejo donde el **Vecino** es el eje central. Nuestra gestión se coordina con el Gobierno Regional y el sector privado.</p><div className="mt-8 p-6 bg-blue-900/20 rounded-2xl border border-blue-500/30"><p className="italic text-lg">"Nuestra meta es una ciudad conectada, segura y transparente."</p></div></>} 
+      content={<><p className="text-2xl font-bold text-white uppercase italic tracking-tighter">Tecnología al Servicio.</p><p>No somos una isla. La IMLS interactúa con un ecosistema complejo donde el **Vecino** es el eje central. Nuestra gestión se coordina con el Gobierno Regional y el sector privado.</p><div className="mt-6 p-6 bg-blue-900/20 rounded-2xl border border-blue-500/30"><p className="italic text-lg">"Nuestra meta es una ciudad conectada, segura y transparente."</p></div></>} 
     />;
 
     case 6: return <ChapterLayout title="Seguridad" subtitle="Línea 1420" 
@@ -264,12 +256,12 @@ export default function App() {
 
     case 8: return <ChapterLayout title="Ley Karin" subtitle="Respeto (21.643)" 
       visual={<div className="p-12 text-center"><Shield size={150} className="text-pink-600 mx-auto"/><h4 className="font-bold text-pink-100 mt-6 text-3xl uppercase">Ley 21.643</h4></div>}
-      content={<><p className="text-3xl font-black text-white mb-6 italic uppercase leading-none border-b border-white/10 pb-4">Tolerancia Cero.</p><p>La **Ley Karin** mandata la prevención y sanción del acoso laboral, sexual y la violencia. Protegemos tu integridad:</p><div className="grid gap-6 mt-8"><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><AlertTriangle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Acoso Laboral</h5><p className="text-xs text-slate-400">Agresión u hostigamiento contra la dignidad.</p></div></div><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><MessageCircle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Violencia</h5><p className="text-xs text-slate-400">Ejercida por terceros (usuarios/vecinos).</p></div></div></div></>} 
+      content={<><p className="text-3xl font-black text-white mb-6 italic uppercase leading-none border-b border-white/10 pb-4">Tolerancia Cero.</p><p>La **Ley Karin** mandata la prevención y sanción del acoso laboral, sexual y la violencia. Protegemos tu integridad:</p><div className="grid gap-6 mt-8"><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><AlertTriangle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Acoso Laboral</h5><p className="text-xs text-slate-400">Agresión u hostigamiento contra la dignidad.</p></div></div><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><MessageCircle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Violencia</h5><p className="text-xs text-slate-400">Ejercida por terceros (usuarios/vecinos).</p></div></div></div><p className="mt-8 text-xs bg-white/5 p-4 rounded-xl text-center italic">"Un solo acto grave es suficiente para denunciar."</p></>} 
     />;
 
     case 9: return <ChapterLayout title="Protección" subtitle="Mutualidad y Emergencias" 
       visual={<div className="p-12"><HardHat size={150} className="text-yellow-500 mx-auto animate-bounce"/></div>}
-      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad CChC</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><MapPin/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
+      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad CChC</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><Siren size={30}/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
     />;
 
     case 10: return <ChapterLayout title="Educación" subtitle="Capacitación Continua" 
@@ -277,38 +269,43 @@ export default function App() {
       content={<><p className="text-3xl font-black text-white mb-6 uppercase italic">Capacitación Continua.</p><p className="font-light">Impulsamos tu crecimiento profesional:</p><div className="grid gap-6 mt-8"><div className="p-6 bg-white/5 rounded-3xl border border-white/10 flex items-center gap-6"><BookOpen className="text-red-500" size={40}/><div><h4 className="text-white font-black text-xl uppercase">Academia</h4><p className="text-slate-400 text-xs mt-1">Cursos certificados de gestión pública.</p></div></div><div className="p-6 bg-white/5 rounded-3xl border border-white/10 flex items-center gap-6"><Zap className="text-orange-500" size={40}/><div><h4 className="text-white font-black text-xl uppercase">Innovación</h4><p className="text-slate-400 text-xs mt-1">Talleres de soluciones digitales.</p></div></div></div></>} 
     />;
 
+    // 11. QUIZ
     case 11: return (
       <div className="h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-4">
         <div className="bg-slate-900 w-full max-w-4xl rounded-[3rem] border border-white/10 flex flex-col h-[80vh] shadow-2xl relative overflow-hidden">
            <div className="absolute top-0 left-0 w-full h-2 bg-white/5"><div className="h-full bg-red-600 transition-all" style={{width: `${((quizIndex+1)/10)*100}%`}}></div></div>
+           
            {!quizFinished ? (
-             <div className="flex-1 flex flex-col p-8 lg:p-14 overflow-hidden">
-               <div className="flex justify-between items-center mb-8 text-[10px] font-black text-slate-500 uppercase tracking-widest"><span>EVALUACIÓN</span><span>{quizIndex + 1} / 10</span></div>
-               <h3 className="text-2xl lg:text-4xl font-black text-white leading-tight mb-8 uppercase italic tracking-tighter">{QUESTIONS[quizIndex].q}</h3>
-               <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+             <div className="flex-1 flex flex-col p-8 lg:p-12 overflow-hidden">
+               <div className="flex justify-between items-center mb-6 text-[10px] font-black text-slate-500 uppercase tracking-widest"><span>EVALUACIÓN</span><span>{quizIndex + 1} / 10</span></div>
+               <h3 className="text-xl lg:text-3xl font-black text-white leading-tight mb-6">{QUESTIONS[quizIndex].q}</h3>
+               
+               <div className="flex-1 overflow-y-auto space-y-3 pr-2">
                  {QUESTIONS[quizIndex].options.map((opt, i) => (
-                   <button key={i} onClick={() => handleAnswer(i)} disabled={quizState !== 'waiting'} className={`w-full text-left p-6 rounded-[2rem] border-2 font-bold text-lg lg:text-xl transition-all ${quizState === 'waiting' ? 'border-white/10 hover:bg-white/5 text-white' : i === QUESTIONS[quizIndex].ans ? 'bg-green-600/20 border-green-600 text-green-400' : 'opacity-30 grayscale text-white'}`}>{opt}</button>
+                   <button key={i} onClick={() => handleAnswer(i)} disabled={quizState !== 'waiting'} className={`w-full text-left p-5 rounded-2xl border-2 font-bold text-sm lg:text-lg transition-all ${quizState === 'waiting' ? 'border-white/10 hover:bg-white/5 text-white' : i === QUESTIONS[quizIndex].ans ? 'bg-green-600/20 border-green-600 text-green-400' : 'opacity-30 grayscale text-white'}`}>{opt}</button>
                  ))}
                </div>
+
                {quizState !== 'waiting' && (
-                 <div className="mt-6 p-6 rounded-[2rem] bg-white/5 border-l-4 border-red-600 shrink-0 animate-in slide-in-from-bottom-4">
-                    <p className="text-white text-sm font-light italic leading-relaxed">{QUESTIONS[quizIndex].explanation}</p>
-                    <button onClick={() => { setQuizState('waiting'); if(quizIndex < 9) setQuizIndex(quizIndex+1); else setQuizFinished(true); }} className="w-full mt-4 bg-white text-slate-950 p-4 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-lg">Siguiente</button>
+                 <div className="mt-4 p-4 rounded-2xl bg-white/5 border-l-4 border-red-600 shrink-0">
+                    <p className="text-white text-xs font-light italic">{QUESTIONS[quizIndex].explanation}</p>
+                    <button onClick={() => { setQuizState('waiting'); if(quizIndex < 9) setQuizIndex(quizIndex+1); else setQuizFinished(true); }} className="w-full mt-3 bg-white text-slate-950 p-3 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-red-600 hover:text-white transition-all">Siguiente</button>
                  </div>
                )}
              </div>
            ) : (
-             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in duration-500">
-               <Award size={120} className="text-yellow-500 mb-10 animate-bounce drop-shadow-[0_0_40px_rgba(234,179,8,0.5)]" />
-               <h2 className="text-6xl font-black text-white mb-8 uppercase italic tracking-tighter leading-none">¡APROBADO!</h2>
-               <p className="text-slate-400 mb-12 text-xl font-light">Has completado la inducción 2026.</p>
-               <button onClick={() => setStep(12)} className="bg-red-600 text-white py-5 px-12 rounded-[3rem] font-black uppercase tracking-widest text-xl shadow-2xl shadow-red-900/50 hover:scale-105 transition-transform">Ver Diploma</button>
+             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in">
+               <Award size={100} className="text-yellow-500 mb-8 animate-bounce" />
+               <h2 className="text-5xl font-black text-white mb-6 uppercase italic">¡APROBADO!</h2>
+               <p className="text-slate-400 mb-10 text-lg">Has completado la inducción 2026.</p>
+               <button onClick={() => setStep(12)} className="bg-red-600 text-white py-4 px-10 rounded-2xl font-black uppercase tracking-widest text-lg shadow-xl hover:scale-105 transition-transform">Ver Diploma</button>
              </div>
            )}
         </div>
       </div>
     );
 
+    // 12. FINAL (CERTIFICADO + RDMLS)
     case 12: return (
       <div className="h-[100dvh] bg-slate-950 flex flex-col overflow-y-auto font-sans p-6">
          <div className="w-full max-w-5xl mx-auto space-y-10 py-10">
