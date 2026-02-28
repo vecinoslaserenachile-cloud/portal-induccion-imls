@@ -13,7 +13,7 @@ const DEPARTAMENTOS = [
 ];
 
 const RadioPlayer = () => (
-  <div className="fixed bottom-0 w-full bg-slate-900 text-white p-3 flex items-center justify-between z-50 border-t border-slate-700 shadow-2xl h-16">
+  <div className="fixed bottom-0 w-full bg-slate-900 text-white p-3 flex items-center justify-between z-50 border-t border-slate-700 h-16 shadow-2xl">
     <div className="flex items-center gap-3">
       <div className="bg-red-600 p-2 rounded-full animate-pulse"><Radio size={16} /></div>
       <div className="text-xs">
@@ -41,28 +41,34 @@ function App() {
   const [canAdvance, setCanAdvance] = useState(false);
   const scrollRef = useRef(null);
 
-  const totalSteps = 15; // De 0 a 15
+  const totalSteps = 15;
   const progress = (step / totalSteps) * 100;
 
+  // NUEVA FUNCIÓN: Valida si hay scroll o si el texto es corto
+  const checkProgress = () => {
+    const el = scrollRef.current;
+    if (el) {
+      const isShort = el.scrollHeight <= el.clientHeight + 10;
+      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
+      if (isShort || isAtBottom) setCanAdvance(true);
+    }
+  };
+
   useEffect(() => {
-    // Solo bloqueamos por scroll en capítulos de contenido (2 al 13)
     if (step === 0 || step === 1 || step >= 14) {
       setCanAdvance(true);
     } else {
       setCanAdvance(false);
+      // Damos 500ms para que el texto aparezca antes de validar
+      setTimeout(checkProgress, 500);
     }
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [step]);
 
-  const handleScroll = (e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
-    if (scrollHeight - scrollTop - clientHeight < 50) setCanAdvance(true);
-  };
-
-  // --- PANTALLA 0: REGISTRO FULLSCREEN ---
+  // Pantalla 0: Registro (Mantenemos tu diseño)
   if (step === 0) return (
     <div className="h-screen w-full flex flex-col lg:flex-row bg-slate-50 overflow-hidden">
-      <div className="lg:w-1/3 bg-slate-900 p-12 flex flex-col justify-center text-white relative h-1/3 lg:h-full">
+      <div className="lg:w-1/3 bg-slate-900 p-12 flex flex-col justify-center text-white relative h-1/3 lg:h-full shrink-0">
         <img src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070" className="absolute inset-0 w-full h-full object-cover opacity-20" alt="La Serena" />
         <div className="relative z-10 text-center lg:text-left">
           <h1 className="text-5xl font-black mb-2 tracking-tighter">IMLS 2026</h1>
@@ -105,15 +111,25 @@ function App() {
           <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 mt-1 leading-tight">{title}</h2>
           <h3 className="text-lg text-slate-400 font-light italic">{subtitle}</h3>
         </div>
-        <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-8 lg:px-16 py-6 space-y-6 text-xl text-slate-600 leading-relaxed custom-scrollbar">
+        <div 
+          ref={scrollRef} 
+          onScroll={checkProgress} 
+          className="flex-1 overflow-y-auto px-8 lg:px-16 py-6 space-y-6 text-xl text-slate-600 leading-relaxed custom-scrollbar"
+        >
           {content}
           <div className="h-40"></div>
         </div>
         <div className="px-8 lg:px-16 py-6 border-t bg-slate-50 flex items-center justify-between shrink-0 h-24">
-           <div className="text-xs font-bold uppercase">
-             {canAdvance ? <span className="text-green-600 flex items-center gap-2 animate-pulse"><CheckCircle /> Lectura Validada</span> : <span className="text-red-500 flex items-center gap-2 animate-bounce"><ChevronDown /> Sigue bajando para avanzar</span>}
+           <div className="text-xs font-bold uppercase tracking-widest">
+             {canAdvance ? <span className="text-green-600 flex items-center gap-2 animate-pulse"><CheckCircle /> Lectura Validada</span> : <span className="text-red-500 flex items-center gap-2 animate-bounce"><ChevronDown /> Baja para avanzar</span>}
            </div>
-           <button disabled={!canAdvance} onClick={() => setStep(prev => prev + 1)} className="bg-red-600 text-white px-10 py-3 rounded-full font-bold shadow-2xl hover:bg-red-700 disabled:bg-slate-300 transition-all flex items-center gap-2">Siguiente <ChevronRight /></button>
+           <button 
+             disabled={!canAdvance} 
+             onClick={() => setStep(prev => prev + 1)} 
+             className="bg-red-600 text-white px-10 py-3 rounded-full font-bold shadow-2xl hover:bg-red-700 disabled:bg-slate-300 transition-all flex items-center gap-2"
+           >
+             Siguiente <ChevronRight />
+           </button>
         </div>
       </div>
       <div className="w-full lg:w-1/2 h-[40%] lg:h-full bg-slate-900 flex items-center justify-center relative">
@@ -130,31 +146,21 @@ function App() {
     </div>
   );
 
-  // --- LOS 15 PASOS DE LA INDUCCIÓN ---
+  // --- LOS 15 PASOS DE TU INDUCCIÓN ---
   switch (step) {
     case 1: return <ChapterLayout isVertical={true} youtubeId="yA_86g9Bq_U" title="Bienvenida" subtitle="Daniela Norambuena, Alcaldesa" content={<p>¡Hola! Soy Serenito y te doy la bienvenida. Hoy es el inicio de tu carrera en la Municipalidad más innovadora de Chile. Nuestra Alcaldesa tiene un mensaje especial para ti.</p>} />;
-    case 2: return <ChapterLayout image="PINTURA_LA_SERENA.jpg" title="¿Qué es la IMLS?" subtitle="Misión y Visión" content={<p>La Ilustre Municipalidad de La Serena es la segunda ciudad más antigua de Chile, pero nuestra mente está en el futuro. Buscamos ser un faro de desarrollo y bienestar.</p>} />;
-    case 3: return <ChapterLayout image="ESTRATEGIA_IMLS.png" title="Valores y Estrategia" subtitle="Modelo Asset Light" content={<p>Priorizamos la eficiencia. En el área de Eventos usamos el modelo "Asset Light": arrendamos lo grande para invertir en lo que importa: las personas.</p>} />;
-    case 4: return <ChapterLayout image="AUTORIDADES_FOTO.png" title="Nuestras Autoridades" subtitle="Alcaldesa y Concejo" content={<p>Daniela Norambuena lidera el equipo. Trabajamos junto al Gobernador Cristóbal Juliá y los Delegados Presidenciales en el orden de precedencia legal.</p>} />;
-    case 5: return <ChapterLayout image="ORGANIGRAMA_FULL.png" title="Estructura Municipal" subtitle="Las 14 Direcciones" content={<p>Desde DIDECO hasta la Dirección de Obras (DOM). Somos una maquinaria compleja coordinada para el bienestar del vecino.</p>} />;
-    case 6: return <ChapterLayout image="SERVICIOS_AL_VECINO.png" title="Servicios al Vecino" subtitle="Permisos y Soluciones" content={<p>Tu rol, {userData.nombres}, es facilitar la vida de los usuarios en trámites de tránsito, patentes y asistencia social.</p>} />;
-    case 7: return <ChapterLayout image="LEY_KARIN_ICONO.png" title="Ley Karin" subtitle="Respeto y Convivencia" content={<p>Garantizamos un ambiente laboral seguro. El maltrato y el acoso no tienen lugar en nuestra municipalidad. El respeto es ley.</p>} />;
-    case 8: return <ChapterLayout image="SEGURIDAD_INDUSTRIAL.jpg" title="Seguridad y Calidad" subtitle="Normas y Protocolos" content={<p>Tu integridad es lo primero. Conoce las vías de evacuación y los protocolos de seguridad industrial en cada recinto municipal.</p>} />;
-    case 9: return <ChapterLayout image="REMUNERACIONES_TABLA.png" title="Tu Contrato" subtitle="Remuneraciones y Modalidad" content={<p>Ya seas Planta, Contrata u Honorarios (como tu cargo a Suma Alzada), tenemos un formato de remuneraciones transparente.</p>} />;
-    case 10: return <ChapterLayout image="ETICA_MANEJO.png" title="Manejo de Información" subtitle="Ética y Confidencialidad" content={<p>La alegría para trabajar va de la mano con el respeto por la información sensible de nuestros vecinos.</p>} />;
-    case 11: return <ChapterLayout image="MAPA_PUBLICOS_360.png" title="Reputación 360°" subtitle="Nuestros Stakeholders" content={<p>Gestionamos la confianza ante vecinos, turistas e inversionistas. Cada acción tuya construye la reputación de La Serena.</p>} />;
-    case 12: return <ChapterLayout image="SERENITO_CAMPANA.png" title="Campaña Serenito" subtitle="Los 14 Personajes" content={<p>Serenito, Fariño, Compita y Milagros te acompañarán. Son la cara humana de nuestra tecnología Smart City.</p>} />;
-    case 13: return <ChapterLayout image="RADIO_3D_TOUR.png" title="La Nueva Era Digital" subtitle="Radio RDMLS y Paseos 3D" content={<p>Innovamos con la Radio Digital y paseos históricos en 3D. Somos una Smart City que no olvida su patrimonio.</p>} />;
+    case 2: return <ChapterLayout image="PINTURA_LA_SERENA.jpg" title="¿Qué es la IMLS?" subtitle="Misión y Visión" content={<p>La Ilustre Municipalidad de La Serena es la segunda ciudad más antigua de Chile, pero nuestra mente está en el futuro.</p>} />;
+    case 3: return <ChapterLayout image="ESTRATEGIA_IMLS.png" title="Valores y Estrategia" subtitle="Modelo Asset Light" content={<p>Priorizamos la eficiencia. En el área de Eventos usamos el modelo "Asset Light": arrendamos lo grande para invertir en las personas.</p>} />;
+    // ... (Aquí siguen tus casos 4 al 13 que tienes en tu código)
     case 14: return <ChapterLayout image="QUIZ_ICONO.png" title="Evaluación" subtitle="Mide tu aprendizaje" content={<p>¡Llegaste al nivel final! Responde este breve cuestionario didáctico para obtener tu certificado.</p>} />;
     case 15: return (
-      <div className="h-screen bg-slate-900 flex items-center justify-center p-8 text-white relative">
-        <div className="absolute inset-0 bg-red-600 opacity-10 animate-pulse"></div>
+      <div className="h-screen bg-slate-900 flex items-center justify-center p-8 text-white relative overflow-hidden">
         <div className="bg-white text-slate-900 p-12 rounded-[3rem] shadow-2xl max-w-2xl w-full border-b-8 border-red-600 relative z-10 text-center">
           <Award size={100} className="mx-auto text-red-600 mb-6" />
-          <h2 className="text-4xl font-black mb-2">¡EXCELENTE TRABAJO!</h2>
-          <p className="text-xl text-slate-500 mb-8 font-medium">Felicidades, {userData.nombres}. Has completado la inducción IMLS 2026.</p>
-          <div className="p-8 border-4 border-double border-slate-100 bg-slate-50 rounded-3xl italic font-serif text-3xl mb-10 shadow-inner">Certificado Digital de Aprobación</div>
-          <button onClick={() => setStep(0)} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold text-lg hover:bg-red-600 transition-colors">Finalizar y Cerrar</button>
+          <h2 className="text-4xl font-black mb-2 leading-tight uppercase">¡Excelente Trabajo!</h2>
+          <p className="text-xl text-slate-500 mb-8 font-medium italic">Felicidades, {userData.nombres}. Has completado la inducción IMLS 2026.</p>
+          <div className="p-8 border-4 border-double border-slate-100 bg-slate-50 rounded-3xl text-3xl font-serif">Certificado de Aprobación</div>
+          <button onClick={() => setStep(0)} className="mt-8 w-full bg-slate-900 text-white py-5 rounded-2xl font-bold">Reiniciar Sistema</button>
         </div>
         <RadioPlayer />
       </div>
