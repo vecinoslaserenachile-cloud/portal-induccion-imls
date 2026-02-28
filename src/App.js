@@ -1,30 +1,52 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Play, CheckCircle, ChevronRight, User, MapPin, 
-  Radio, Music, Award, ChevronDown, Star
+  Radio, BookOpen, Music, Award, HelpCircle, 
+  Mail, Calendar, Phone, Home, Briefcase
 } from 'lucide-react';
 
-// --- COMPONENTES VISUALES ---
+// --- CONFIGURACIÓN DE DATOS ---
+const DEPARTAMENTOS = [
+  "Alcaldía", "Secretaría Municipal", "DIDECO (Desarrollo Comunitario)", 
+  "DOM (Obras Municipales)", "Dirección de Tránsito", "SECPLAN (Planificación)", 
+  "Administración y Finanzas", "Asesoría Jurídica", "Dirección de Control",
+  "Salud (Corporación)", "Educación (Corporación)", "Seguridad Ciudadana",
+  "Aseo y Ornato", "Medio Ambiente", "Turismo y Patrimonio", "Cultura",
+  "Deportes y Recreación", "Comunicaciones e Imagen", "Operaciones y Eventos",
+  "Rentas y Patentes", "Bienestar de Personal", "Gestión de Riesgos y Desastres"
+];
+
+// Texto simulado largo para forzar el scroll
+const LOREM_IMLS = (
+  <div className="space-y-4">
+    <p><strong>Contexto Histórico:</strong> La Serena, fundada en 1544, es la segunda ciudad más antigua de Chile. Como funcionario, eres custodio de una tradición de servicio que abarca siglos. Nuestro compromiso es preservar el patrimonio mientras abrazamos la tecnología Smart City.</p>
+    <p><strong>Cultura Organizacional:</strong> Trabajamos bajo un modelo de gestión por procesos donde la eficiencia no sacrifica la humanidad. La atención al vecino debe ser siempre nuestra prioridad número uno, entendiendo que cada interacción es una oportunidad para fortalecer el tejido social.</p>
+    <p><strong>Innovación 2026:</strong> El proyecto RDMLS (Radio Digital Municipal) y la integración de personajes 3D como Serenito son parte de nuestra nueva cara hacia el futuro. Buscamos simplificar la burocracia mediante herramientas digitales de última generación.</p>
+    <p><strong>Responsabilidades:</strong> Cada dirección tiene protocolos específicos de actuación. Es imperativo conocer los manuales de procedimiento y las normas de ética pública. La probidad no es una opción, es el cimiento de nuestra institución.</p>
+    <p><strong>Entorno Smart City:</strong> Estamos implementando sensores de tráfico, gestión de residuos inteligente y una red de conectividad pública que requiere de funcionarios capacitados en el uso de datos para la toma de decisiones.</p>
+    <p className="text-red-600 font-bold">IMPORTANTE: Para continuar, debe leer hasta el final de este documento técnico para asegurar la comprensión de los valores institucionales.</p>
+  </div>
+);
+
+// --- COMPONENTES UI ---
 
 const RadioPlayer = () => (
-  <div className="fixed bottom-0 w-full bg-slate-900 text-white p-3 flex items-center justify-between z-50 border-t border-slate-700 h-16 shadow-2xl">
+  <div className="fixed bottom-0 w-full bg-slate-900 text-white p-3 flex items-center justify-between z-50 border-t border-slate-700 shadow-2xl">
     <div className="flex items-center gap-3">
       <div className="bg-red-600 p-2 rounded-full animate-pulse"><Radio size={16} /></div>
-      <div className="flex flex-col">
-        <p className="font-bold leading-none text-sm">Radio Digital La Serena</p>
-        <p className="text-slate-400 text-[10px] tracking-wide">Transmisión Oficial RDMLS</p>
+      <div className="text-sm hidden md:block">
+        <p className="font-bold">Radio Digital La Serena</p>
+        <p className="text-xs text-slate-400">Transmisión Oficial RDMLS</p>
       </div>
     </div>
-    <div className="hidden md:block text-[10px] text-slate-500 uppercase tracking-[0.3em] font-bold">Smart City IMLS 2026</div>
-    <div className="flex items-center gap-4 text-slate-400">
-      <Music size={18} />
-    </div>
+    <div className="flex gap-4 text-[10px] text-slate-500 uppercase tracking-[0.2em]">Inducción Smart City IMLS</div>
+    <Music size={18} className="text-slate-500" />
   </div>
 );
 
 const ProgressBar = ({ progress }) => (
-  <div className="fixed top-0 w-full h-1.5 bg-slate-800 z-50">
-    <div className="h-full bg-red-600 transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(220,38,38,0.8)]" style={{ width: `${progress}%` }}></div>
+  <div className="fixed top-0 w-full h-2 bg-slate-200 z-50">
+    <div className="h-full bg-red-600 transition-all duration-1000 ease-out" style={{ width: `${progress}%` }}></div>
   </div>
 );
 
@@ -32,134 +54,221 @@ const ProgressBar = ({ progress }) => (
 
 function App() {
   const [step, setStep] = useState(0);
-  const [userData, setUserData] = useState({ nombres: '', dept: '' });
+  const [userData, setUserData] = useState({ 
+    firstName: '', lastName: '', dob: '', email: '', 
+    address: '', whatsapp: '', dept: '' 
+  });
   const [canAdvance, setCanAdvance] = useState(false);
-  const scrollRef = useRef(null);
-  const totalSteps = 15;
 
-  // Lógica ANTI-BLOQUEO (La solución definitiva)
-  const checkProgress = () => {
-    const el = scrollRef.current;
-    if (el) {
-      // Si el contenido es corto o llegaste al fondo, libera el botón
-      const isShort = el.scrollHeight <= el.clientHeight + 50;
-      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
-      if (isShort || isAtBottom) setCanAdvance(true);
-    }
-  };
+  const totalSteps = 6; 
+  const progress = (step / totalSteps) * 100;
 
   useEffect(() => {
-    // Pasos automáticos (Inicio, Videos, Fin)
-    if (step === 0 || step === 1 || step >= 14) {
+    // Solo bloqueamos por scroll en los pasos de contenido (2, 3, 4, 5)
+    if (step === 1 || step >= 6) {
       setCanAdvance(true);
     } else {
       setCanAdvance(false);
-      setTimeout(checkProgress, 800); // Esperar a que cargue
     }
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    // Volver al inicio del contenedor al cambiar paso
+    const scroller = document.getElementById('text-scroller');
+    if (scroller) scroller.scrollTop = 0;
   }, [step]);
 
-  // --- LAYOUT GENÉRICO ---
-  const ChapterLayout = ({ title, subtitle, content, image, youtubeId = null }) => (
-    <div className="h-screen w-full flex flex-col lg:flex-row bg-white text-slate-900 overflow-hidden pb-16">
-      <ProgressBar progress={(step / totalSteps) * 100} />
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    // Sensor más preciso: requiere llegar al 98% del contenido
+    if (scrollHeight - scrollTop <= clientHeight + 30) {
+      setCanAdvance(true);
+    }
+  };
+
+  // PANTALLA 0: REGISTRO COMPLETO
+  if (step === 0) return (
+    <div className="min-h-screen flex bg-slate-100 font-sans">
+      <div className="hidden lg:flex lg:w-1/3 bg-slate-900 items-center justify-center relative">
+        <img src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070" className="absolute inset-0 w-full h-full object-cover opacity-30" alt="La Serena" />
+        <div className="relative z-10 text-white p-10 text-center">
+          <h1 className="text-5xl font-black mb-4">IMLS</h1>
+          <p className="text-xl font-light tracking-widest uppercase">Portal de Inducción</p>
+        </div>
+      </div>
       
-      <div className="w-full lg:w-1/2 flex flex-col h-full pt-12 relative z-10 bg-white">
+      <div className="w-full lg:w-2/3 p-6 md:p-12 overflow-y-auto">
+        <div className="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-xl">
+          <div className="mb-8">
+             <h2 className="text-3xl font-bold text-slate-800">Ficha del Funcionario</h2>
+             <p className="text-slate-500 mt-1">Ingresa tus datos personales para el registro institucional.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-400 uppercase ml-1">Nombres</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 text-slate-400" size={18}/>
+                <input type="text" className="w-full pl-10 pr-4 py-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Juan Ignacio" onChange={(e) => setUserData({...userData, firstName: e.target.value})} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-400 uppercase ml-1">Apellidos</label>
+              <input type="text" className="w-full px-4 py-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Pérez González" onChange={(e) => setUserData({...userData, lastName: e.target.value})} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-400 uppercase ml-1">Fecha de Nacimiento</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-3 text-slate-400" size={18}/>
+                <input type="date" className="w-full pl-10 pr-4 py-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-red-500 outline-none" onChange={(e) => setUserData({...userData, dob: e.target.value})} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-400 uppercase ml-1">WhatsApp de Contacto</label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 text-slate-400" size={18}/>
+                <input type="tel" className="w-full pl-10 pr-4 py-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-red-500 outline-none" placeholder="+56 9 1234 5678" onChange={(e) => setUserData({...userData, whatsapp: e.target.value})} />
+              </div>
+            </div>
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-xs font-bold text-slate-400 uppercase ml-1">Correo Electrónico</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 text-slate-400" size={18}/>
+                <input type="email" className="w-full pl-10 pr-4 py-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-red-500 outline-none" placeholder="juan.perez@laserena.cl" onChange={(e) => setUserData({...userData, email: e.target.value})} />
+              </div>
+            </div>
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-xs font-bold text-slate-400 uppercase ml-1">Dirección Particular</label>
+              <div className="relative">
+                <Home className="absolute left-3 top-3 text-slate-400" size={18}/>
+                <input type="text" className="w-full pl-10 pr-4 py-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Av. Francisco de Aguirre #..." onChange={(e) => setUserData({...userData, address: e.target.value})} />
+              </div>
+            </div>
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-xs font-bold text-slate-400 uppercase ml-1">Departamento / Área</label>
+              <div className="relative">
+                <Briefcase className="absolute left-3 top-3 text-slate-400" size={18}/>
+                <select className="w-full pl-10 pr-4 py-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-red-500 outline-none appearance-none" onChange={(e) => setUserData({...userData, dept: e.target.value})}>
+                  <option value="">Seleccione su unidad...</option>
+                  {DEPARTAMENTOS.map(dep => <option key={dep} value={dep}>{dep}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button 
+            disabled={!userData.firstName || !userData.lastName || !userData.dept || !userData.email} 
+            onClick={() => setStep(1)} 
+            className="w-full mt-8 bg-slate-900 text-white p-4 rounded-2xl font-bold hover:bg-red-700 disabled:bg-slate-200 transition-all flex justify-between items-center group shadow-lg"
+          >
+            <span>Iniciar Inducción</span>
+            <ChevronRight className="group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const ChapterLayout = ({ title, subtitle, content, image, youtubeId = null, isVertical = false }) => (
+    <div className="min-h-screen flex flex-col lg:flex-row bg-white overflow-hidden pb-16">
+      <ProgressBar progress={progress} />
+      
+      <div className="w-full lg:w-1/2 flex flex-col h-screen pt-12">
         <div className="px-8 lg:px-16 pt-8 pb-4 shrink-0">
-          <p className="text-red-600 font-black text-[10px] tracking-widest uppercase mb-2">Capítulo {step} de {totalSteps}</p>
-          <h2 className="text-4xl lg:text-5xl font-black text-slate-900 leading-none tracking-tight">{title}</h2>
-          <h3 className="text-xl text-slate-400 font-medium italic mt-2">{subtitle}</h3>
+          <span className="text-red-600 font-black text-[10px] tracking-widest uppercase">Capítulo {step} de {totalSteps}</span>
+          <h2 className="text-4xl font-bold text-slate-900 mt-2">{title}</h2>
+          <h3 className="text-xl text-slate-400 font-light italic">{subtitle}</h3>
         </div>
 
-        <div ref={scrollRef} onScroll={checkProgress} className="flex-1 overflow-y-auto px-8 lg:px-16 py-6 space-y-6 text-lg text-slate-600 leading-relaxed">
+        <div 
+          id="text-scroller"
+          className="flex-1 overflow-y-auto px-8 lg:px-16 py-6 space-y-6 text-lg text-slate-600 leading-relaxed custom-scrollbar" 
+          onScroll={handleScroll}
+        >
           {content}
-          <div className="h-32"></div>
+          <div className="h-20"></div>
+          {!canAdvance && (
+             <div className="p-4 bg-red-50 border-l-4 border-red-500 flex items-center gap-3 animate-pulse">
+               <span className="text-red-700 font-bold text-sm">↓ Debe desplazar hacia abajo para completar la lectura institucional</span>
+             </div>
+          )}
         </div>
 
-        <div className="px-8 lg:px-16 py-6 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0 h-24">
-           <div className="text-xs font-bold uppercase tracking-widest">
-             {canAdvance ? 
-               <span className="text-green-600 flex items-center gap-2 animate-pulse"><CheckCircle size={16}/> Listo</span> : 
-               <span className="text-red-500 flex items-center gap-2 animate-bounce"><ChevronDown size={16}/> Baja para avanzar</span>
-             }
+        <div className="px-8 lg:px-16 py-6 border-t bg-slate-50 flex items-center justify-between shrink-0">
+           <div className="text-sm font-medium">
+             {canAdvance ? <span className="text-green-600 flex items-center gap-1">✅ Lectura Validada</span> : <span className="text-slate-400 italic">Pendiente de lectura...</span>}
            </div>
-           <button disabled={!canAdvance} onClick={() => setStep(prev => prev + 1)} className="bg-red-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-slate-900 disabled:bg-slate-200 disabled:text-slate-400 transition-all flex items-center gap-2">
-             Siguiente <ChevronRight size={18} />
+           <button 
+             disabled={!canAdvance} 
+             onClick={() => setStep(prev => prev + 1)} 
+             className="bg-red-600 text-white px-10 py-3 rounded-full font-bold shadow-xl hover:bg-red-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+           >
+             Siguiente <ChevronRight size={20} />
            </button>
         </div>
       </div>
 
-      <div className="w-full lg:w-1/2 h-full bg-slate-900 flex items-center justify-center relative overflow-hidden">
+      <div className={`w-full lg:w-1/2 h-screen relative bg-slate-900 flex items-center justify-center`}>
         {youtubeId ? (
-          <iframe className="w-full h-full" src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=0&controls=0`} title="Video" frameBorder="0" allowFullScreen></iframe>
+          <div className={`${isVertical ? 'h-[90%] aspect-[9/16]' : 'w-full aspect-video'} bg-black shadow-2xl overflow-hidden rounded-2xl`}>
+            <iframe 
+              width="100%" 
+              height="100%" 
+              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=0&controls=0&modestbranding=1`} 
+              title="YouTube video" 
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowFullScreen
+            ></iframe>
+          </div>
         ) : (
-          <>
-            <img src={image} alt="Visual" className="w-full h-full object-cover opacity-70" onLoad={checkProgress} />
-            <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md p-3 rounded-xl border border-white/20 text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-              <Star size={12} className="text-yellow-400" /> Smart City View
-            </div>
-          </>
+          <img src={image} alt="Visual" className="w-full h-full object-cover opacity-60" />
         )}
       </div>
       <RadioPlayer />
     </div>
   );
 
-  // --- PANTALLA 0: REGISTRO ---
-  if (step === 0) return (
-    <div className="h-screen w-full flex flex-col lg:flex-row bg-slate-900 overflow-hidden">
-      <div className="lg:w-1/3 bg-slate-900 p-12 flex flex-col justify-center text-white relative border-r border-slate-800">
-        <h1 className="text-6xl font-black mb-2 tracking-tighter">IMLS 2026</h1>
-        <p className="text-red-500 font-bold uppercase tracking-widest text-sm">Portal de Inducción</p>
-      </div>
-      <div className="flex-1 p-12 bg-white flex items-center justify-center">
-        <div className="max-w-md w-full space-y-6">
-          <h2 className="text-3xl font-bold text-slate-800 flex items-center gap-2"><User className="text-red-600"/> Ficha del Funcionario</h2>
-          <input className="w-full p-4 border border-slate-300 rounded-xl bg-slate-50 text-slate-900" placeholder="Nombre completo" onChange={e => setUserData({...userData, nombres: e.target.value})} />
-          <select className="w-full p-4 border border-slate-300 rounded-xl bg-slate-50 text-slate-900" onChange={e => setUserData({...userData, dept: e.target.value})}>
-            <option value="">Selecciona Departamento...</option>
-            <option value="DIDECO">DIDECO</option>
-            <option value="Salud">Salud</option>
-          </select>
-          <button disabled={!userData.nombres || !userData.dept} onClick={() => setStep(1)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold hover:bg-red-600 transition-all shadow-xl flex justify-between px-8">
-            Ingresar <ChevronRight />
-          </button>
-        </div>
-      </div>
-      <RadioPlayer />
-    </div>
-  );
-
-  // --- CONTENIDO ---
   switch (step) {
-    case 1: return <ChapterLayout title="Bienvenida" subtitle="Daniela Norambuena" youtubeId="yA_86g9Bq_U" content={<p>¡Hola! Soy Serenito y te doy la bienvenida.</p>} />;
-    case 2: return <ChapterLayout title="¿Qué es la IMLS?" subtitle="Historia" image="PINTURA_LA_SERENA.jpg" content={<p>La segunda ciudad más antigua...</p>} />;
-    
-    // AQUÍ ESTABA EL PROBLEMA, AHORA ARREGLADO:
-    case 3: return <ChapterLayout title="Valores" subtitle="La Lucha Municipalidad" image="ESTRATEGIA_IMLS.png" content={
-      <>
-        <p><strong>Eficiencia ante todo.</strong> En esta nueva gestión, cada recurso cuenta.</p>
-        <p>Nuestra "Lucha" es contra la burocracia lenta. Queremos soluciones rápidas, digitales y cercanas.</p>
-        <p>Este contenido ya no se pegará porque el sistema detecta automáticamente cuando terminas de leer.</p>
-      </>
-    } />;
-
-    // Puedes rellenar los pasos 4 al 14 aquí...
-    default: 
-      if (step < 15) return <ChapterLayout title={`Capítulo ${step}`} subtitle="En construcción" image="placeholder.jpg" content={<p>Contenido en desarrollo...</p>} />;
-      
-    case 15: return (
-      <div className="h-screen bg-slate-900 flex items-center justify-center text-white p-4">
-        <div className="bg-white text-slate-900 p-12 rounded-[3rem] text-center max-w-2xl w-full">
-          <Award size={80} className="mx-auto text-red-600 mb-6" />
-          <h2 className="text-4xl font-black mb-4">¡FELICIDADES!</h2>
-          <p className="text-xl text-slate-500 mb-8">Has completado la inducción, {userData.nombres}.</p>
-          <div className="p-6 bg-slate-100 rounded-xl border-2 border-slate-200 mb-8 font-serif text-2xl text-slate-700">Certificado de Aprobación IMLS 2026</div>
-          <button onClick={() => setStep(0)} className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-red-600 transition-colors">Reiniciar</button>
+    case 1: 
+      return <ChapterLayout 
+        isVertical={true}
+        youtubeId="yA_86g9Bq_U" // ID de un ejemplo vertical (Short)
+        title="Mensaje de Bienvenida" 
+        subtitle="Un saludo de nuestra Alcaldesa" 
+        content={LOREM_IMLS} 
+      />;
+    case 2: 
+      return <ChapterLayout 
+        image="https://images.unsplash.com/photo-1555848962-6e79363ec58f?q=80&w=2033"
+        title="Visión Smart City" 
+        subtitle="Hacia el Municipio del Futuro" 
+        content={LOREM_IMLS} 
+      />;
+    case 3: 
+      return <ChapterLayout 
+        image="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2070"
+        title="Ley Karin y Convivencia" 
+        subtitle="Nuestro compromiso con el respeto" 
+        content={LOREM_IMLS} 
+      />;
+    case 6: 
+      return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-red-600 rounded-full blur-[150px] opacity-20"></div>
+          <div className="bg-white p-12 rounded-[40px] shadow-2xl text-center max-w-2xl relative z-10 border-b-8 border-red-600">
+            <Award size={100} className="mx-auto text-red-600 mb-8" />
+            <h2 className="text-5xl font-black text-slate-900 mb-4">¡LOGRADO!</h2>
+            <p className="text-xl text-slate-500 mb-10 leading-relaxed">
+              Felicitaciones <strong>{userData.firstName} {userData.lastName}</strong>.<br/>
+              Has completado exitosamente la inducción para la unidad de <strong>{userData.dept}</strong>.
+            </p>
+            <div className="p-8 border-4 border-double border-slate-100 bg-slate-50 rounded-3xl italic font-serif text-3xl text-slate-800 mb-10 shadow-inner">
+              Certificado Digital IMLS 2026
+            </div>
+            <button onClick={() => setStep(0)} className="bg-slate-900 text-white px-12 py-4 rounded-2xl font-bold text-lg hover:bg-red-700 transition-colors shadow-lg">Cerrar Sesión</button>
+          </div>
+          <RadioPlayer />
         </div>
-        <RadioPlayer />
-      </div>
-    );
+      );
+    default: return null;
   }
 }
 
