@@ -1,8 +1,77 @@
-body {
-  margin: 0;
-  font-family: sans-serif;
-  background-color: #f3f4f6;
-  display: flex;
-  justify-content: center;
-  min-height: 100vh;
+* { margin: 0; padding: 0; box-config: border-box; font-family: 'Segoe UI', sans-serif; }
+
+body, html { height: 100%; overflow: hidden; }
+
+.main-container { display: flex; height: 100vh; width: 100vw; }
+
+/* Lado Izquierdo con imagen de fondo */
+.sidebar {
+    width: 35%;
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('assets/img/background.jpg');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px;
+}
+
+/* Lado Derecho */
+.content-area {
+    width: 65%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* Manejo de pasos (Evita bloqueos) */
+.step {
+    display: none; /* Oculto por defecto */
+    width: 80%;
+    max-width: 500px;
+    animation: fadeIn 0.5s ease;
+}
+
+.step.active {
+    display: block; /* Solo el activo se muestra */
+}
+
+/* Ajuste de espaciado solicitado */
+h2 { margin-bottom: 10px; color: #1a2a40; font-size: 28px; }
+p { margin-bottom: 25px; color: #666; }
+
+.row { display: flex; gap: 15px; margin-bottom: 15px; }
+input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 8px; background: #f8f9fa; }
+
+.btn-next {
+    width: 100%;
+    padding: 15px;
+    background: #e9ecef;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.btn-next:hover { background: #dee2e6; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.main-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    background: #0d1b2a;
+    color: white;
 }
