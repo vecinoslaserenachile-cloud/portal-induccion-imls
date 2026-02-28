@@ -60,6 +60,7 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Pasos que NO bloquean (Login, Video, Finales)
     if ([0, 1, 11, 12].includes(step)) {
       setCanAdvance(true);
     } else {
@@ -70,6 +71,7 @@ export default function App() {
         }
       }, 1500);
     }
+    // Reset Scroll
     window.scrollTo(0, 0);
     if(scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [step]);
@@ -87,10 +89,13 @@ export default function App() {
     }
   };
 
+  const printCertificate = () => window.print();
+
   // --- LAYOUT ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="flex flex-col h-[100dvh] w-full bg-slate-950 text-slate-100 font-sans overflow-hidden">
       
+      {/* Barra Progreso */}
       <div className="fixed top-0 left-0 w-full h-1.5 bg-slate-800 z-[100]">
         <div className="h-full bg-gradient-to-r from-red-600 to-orange-500 shadow-[0_0_20px_red] transition-all duration-700" style={{ width: `${(step / 12) * 100}%` }}></div>
       </div>
@@ -180,7 +185,7 @@ export default function App() {
   );
 
   switch (step) {
-    // 1. VIDEO NATIVO (SIN TRUCOS, SOLO EL IFRAME PURO)
+    // 1. VIDEO (NATIVO - SIN AUTOPLAY - SIN LOOP - SIN PROBLEMAS)
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Daniela Norambuena, Alcaldesa" 
       visual={
         <div className="w-full h-full bg-black rounded-[2rem] overflow-hidden shadow-2xl border border-white/20">
@@ -240,7 +245,7 @@ export default function App() {
 
     case 9: return <ChapterLayout title="Protección" subtitle="Mutualidad y Emergencias" 
       visual={<div className="p-12"><HardHat size={150} className="text-yellow-500 mx-auto animate-bounce"/></div>}
-      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual CChC</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><Radio size={30}/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
+      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad CChC</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><Radio size={30}/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
     />;
 
     case 10: return <ChapterLayout title="Educación" subtitle="Capacitación Continua" 
@@ -284,7 +289,6 @@ export default function App() {
       </div>
     );
 
-    // 12. FINAL
     case 12: return (
       <div className="h-[100dvh] bg-slate-950 flex flex-col overflow-y-auto font-sans p-6">
          <div className="w-full max-w-5xl mx-auto space-y-10 py-10">
