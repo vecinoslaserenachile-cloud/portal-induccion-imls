@@ -11,9 +11,7 @@ import {
 } from 'lucide-react';
 
 // --- DATOS MUNICIPALES ---
-const DEPARTAMENTOS = [
-  "Alcaldía", "Administración Municipal", "Secretaría Municipal", "SECPLAN", "DIDECO", "Dirección de Obras (DOM)", "Gestión de Personas", "Seguridad Ciudadana", "Tránsito", "Turismo y Patrimonio", "Servicio a la Comunidad", "Salud", "Educación", "Asesoría Jurídica", "Control"
-];
+const DEPARTAMENTOS = ["Alcaldía", "Administración Municipal", "Secretaría Municipal", "SECPLAN", "DIDECO", "Dirección de Obras (DOM)", "Gestión de Personas", "Seguridad Ciudadana", "Tránsito", "Turismo y Patrimonio", "Servicio a la Comunidad", "Salud", "Educación", "Asesoría Jurídica", "Control"];
 
 const CONCEJALES = ["Cristian Marín", "Rayen Pojomovsky", "Alejandro Astudillo", "Gladys Marín", "Francisca Barahona", "María Teresita Prouvay", "Camilo Araya", "María Marcela Damke", "Matías Espinosa", "Luisa Jinete"];
 
@@ -55,26 +53,23 @@ export default function App() {
 
   const handleScroll = (e: any) => {
     const el = e.target;
-    // Margen amplio para asegurar desbloqueo en móviles
+    // Margen amplio para asegurar desbloqueo
     if (el.scrollHeight - el.scrollTop <= el.clientHeight + 150) {
       setCanAdvance(true);
     }
   };
 
   useEffect(() => {
-    // Pasos que NO bloquean (Login, Video, Finales)
     if ([0, 1, 11, 12].includes(step)) {
       setCanAdvance(true);
     } else {
       setCanAdvance(false);
-      // Desbloqueo automático si el contenido es corto
       setTimeout(() => {
         if (scrollRef.current && scrollRef.current.scrollHeight <= scrollRef.current.clientHeight + 50) {
           setCanAdvance(true);
         }
       }, 1500);
     }
-    // Reset Scroll
     window.scrollTo(0, 0);
     if(scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [step]);
@@ -92,33 +87,30 @@ export default function App() {
     }
   };
 
-  const printCertificate = () => window.print();
-
   // --- LAYOUT ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="flex flex-col h-[100dvh] w-full bg-slate-950 text-slate-100 font-sans overflow-hidden">
       
-      {/* Barra Progreso */}
       <div className="fixed top-0 left-0 w-full h-1.5 bg-slate-800 z-[100]">
         <div className="h-full bg-gradient-to-r from-red-600 to-orange-500 shadow-[0_0_20px_red] transition-all duration-700" style={{ width: `${(step / 12) * 100}%` }}></div>
       </div>
       
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* VISUAL (Arriba en móvil, Izq en PC) */}
+        {/* VISUAL (Izquierda / Arriba) */}
         <div className="w-full lg:w-1/2 h-[35vh] lg:h-full bg-slate-900 flex items-center justify-center p-4 lg:p-12 relative border-b lg:border-b-0 lg:border-r border-white/5 z-10">
            <div className="w-full h-full lg:rounded-[3rem] overflow-hidden shadow-2xl bg-black border border-white/10 flex items-center justify-center relative">
              {visual}
            </div>
         </div>
 
-        {/* CONTENIDO (Abajo en móvil, Der en PC) */}
+        {/* CONTENIDO (Derecha / Abajo) */}
         <div className="w-full lg:w-1/2 flex flex-col h-[65vh] lg:h-full bg-slate-950 overflow-hidden relative z-20">
           <div className="px-8 lg:px-16 pt-10 pb-6 shrink-0 border-b border-white/5 bg-slate-950/95 backdrop-blur-md">
              <div className="flex items-center gap-3 mb-2">
                 <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">PASO {step}</span>
                 <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest pl-2 border-l border-white/20">INDUCCIÓN 2026</span>
              </div>
-             <h2 className="text-3xl lg:text-6xl font-black text-white leading-none tracking-tighter uppercase italic mb-1">{title}</h2>
+             <h2 className="text-2xl lg:text-5xl font-black text-white leading-none tracking-tighter uppercase italic mb-1">{title}</h2>
              <h3 className="text-lg lg:text-2xl text-slate-400 font-serif italic">{subtitle}</h3>
           </div>
 
@@ -188,14 +180,14 @@ export default function App() {
   );
 
   switch (step) {
-    // 1. VIDEO (NATIVO, SIN TRUCOS)
+    // 1. VIDEO NATIVO (SIN TRUCOS, SOLO EL IFRAME PURO)
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Daniela Norambuena, Alcaldesa" 
       visual={
         <div className="w-full h-full bg-black rounded-[2rem] overflow-hidden shadow-2xl border border-white/20">
           <iframe 
             className="w-full h-full" 
             src="https://www.youtube.com/embed/EQUdyb-YVxM?rel=0&modestbranding=1" 
-            title="Mensaje Alcaldesa" 
+            title="Bienvenida Alcaldesa" 
             frameBorder="0" 
             allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
             allowFullScreen
@@ -248,7 +240,7 @@ export default function App() {
 
     case 9: return <ChapterLayout title="Protección" subtitle="Mutualidad y Emergencias" 
       visual={<div className="p-12"><HardHat size={150} className="text-yellow-500 mx-auto animate-bounce"/></div>}
-      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><Radio size={30}/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
+      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual CChC</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><Radio size={30}/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
     />;
 
     case 10: return <ChapterLayout title="Educación" subtitle="Capacitación Continua" 
@@ -284,6 +276,7 @@ export default function App() {
              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in">
                <Award size={100} className="text-yellow-500 mb-8 animate-bounce" />
                <h2 className="text-5xl font-black text-white mb-6 uppercase italic">¡APROBADO!</h2>
+               <p className="text-slate-400 mb-10 text-lg">Has completado la inducción 2026.</p>
                <button onClick={() => setStep(12)} className="bg-red-600 text-white py-4 px-10 rounded-2xl font-black uppercase tracking-widest text-lg shadow-xl hover:scale-105 transition-transform">Ver Diploma</button>
              </div>
            )}
@@ -291,9 +284,11 @@ export default function App() {
       </div>
     );
 
+    // 12. FINAL
     case 12: return (
       <div className="h-[100dvh] bg-slate-950 flex flex-col overflow-y-auto font-sans p-6">
          <div className="w-full max-w-5xl mx-auto space-y-10 py-10">
+            {/* DIPLOMA */}
             <div className="bg-white p-10 lg:p-20 rounded-[1rem] shadow-2xl text-slate-900 relative overflow-hidden border-[20px] border-double border-[#C5A065] relative">
                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none">
                  <img src="/img/escudo.png" className="h-[500px]" />
