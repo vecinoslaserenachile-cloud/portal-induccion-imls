@@ -18,8 +18,9 @@ jobs:
         with:
           node-version: 20
 
+      # ESTA ES LA LÍNEA MÁGICA QUE EVITA ERRORES
       - name: Instalar Dependencias
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Construir Proyecto (Vite)
         run: npm run build
