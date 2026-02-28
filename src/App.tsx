@@ -39,9 +39,7 @@ const CONCEJALES = [
 export default function App() {
   const [step, setStep] = useState(0); 
   const [userData, setUserData] = useState({ nombres: '', apellidos: '', rut: '', dept: '', cargo: '' });
-  // NOTA: canAdvance inicia en TRUE para no bloquear nunca al usuario si falla el scroll
-  const [canAdvance, setCanAdvance] = useState(true); 
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // ELIMINADO EL ESTADO 'canAdvance' GLOBAL QUE CAUSABA EL BUCLE
   
   // Quiz Logic
   const [quizIndex, setQuizIndex] = useState(0);
@@ -52,29 +50,26 @@ export default function App() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const totalSteps = 12;
 
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // Fecha para el certificado (Estática al cargar para evitar re-renders infinitos)
+  const today = new Date().toLocaleDateString();
 
-  // Control Visual de Lectura (Solo visual, ya no bloquea el botón)
-  const checkProgress = () => {
-    const el = scrollRef.current;
-    if (el) {
-      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
-      const isShort = el.scrollHeight <= el.clientHeight + 50;
-      if (isAtBottom || isShort) setCanAdvance(true);
+  // Reset del scroll al cambiar de paso
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
     }
-  };
-
-  // Resetear scroll al cambiar de paso
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
-    // Damos feedback visual de "falta leer" pero NO bloqueamos
-    setCanAdvance(false);
-    setTimeout(() => setCanAdvance(true), 1000); // Se activa solo al segundo
   }, [step]);
 
+  // --- LÓGICA DE NAVEGACIÓN SEGURA ---
+  const goNext = () => {
+    setStep(prev => prev + 1);
+  };
+
+  const goBack = () => {
+    setStep(prev => Math.max(0, prev - 1));
+  };
+
+  // --- LÓGICA DEL QUIZ ---
   const handleAnswer = (optionIndex: number) => {
     if (quizState !== 'waiting') return;
     const isCorrect = optionIndex === QUESTIONS[quizIndex].ans;
@@ -97,26 +92,25 @@ export default function App() {
 
   const printCertificate = () => window.print();
 
-  // --- LAYOUT MAESTRO ---
+  // --- LAYOUT ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="h-screen w-full flex flex-col lg:flex-row bg-slate-50 text-slate-900 overflow-hidden font-sans">
       
       {/* Barra Progreso */}
-      <div className="fixed top-0 w-full h-3 bg-slate-200 z-50">
+      <div className="fixed top-0 w-full h-2 bg-slate-200 z-50">
         <div className="h-full bg-red-600 transition-all duration-300" style={{ width: `${(step / totalSteps) * 100}%` }}></div>
       </div>
       
-      {/* VISUAL (Izquierda PC / Arriba Móvil) */}
+      {/* VISUAL */}
       <div className="lg:order-2 lg:w-1/2 w-full lg:h-full h-[35vh] bg-slate-100 flex items-center justify-center relative p-0 lg:p-12 border-b lg:border-b-0 lg:border-l border-slate-200">
         <div className="w-full h-full lg:rounded-3xl overflow-hidden shadow-none lg:shadow-2xl bg-white relative">
            {visual}
         </div>
       </div>
 
-      {/* CONTENIDO (Derecha PC / Abajo Móvil) */}
+      {/* CONTENIDO */}
       <div className="lg:order-1 lg:w-1/2 w-full flex flex-col h-[65vh] lg:h-full bg-white relative z-10">
         
-        {/* ENCABEZADO */}
         <div className="px-8 lg:px-16 pt-8 pb-4 shrink-0 bg-white border-b border-slate-100">
           <div className="flex items-center gap-3 mb-2">
             <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Módulo {step}</span>
@@ -126,38 +120,28 @@ export default function App() {
           <h3 className="text-lg lg:text-2xl text-slate-500 font-serif italic">{subtitle}</h3>
         </div>
         
-        {/* CUERPO TEXTO */}
-        <div ref={scrollRef} onScroll={checkProgress} className="flex-1 overflow-y-auto px-8 lg:px-16 py-6 scroll-smooth">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-8 lg:px-16 py-6 scroll-smooth">
           <div className="space-y-8 text-lg lg:text-xl text-slate-700 leading-relaxed">
             {content}
             <div className="h-12"></div>
           </div>
         </div>
 
-        {/* BOTONERA (SIN BLOQUEO) */}
+        {/* BOTONERA SIN BLOQUEOS NI CONDICIONES */}
         <div className="px-8 lg:px-16 py-4 border-t border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-20">
-           
-           <button 
-             onClick={() => setStep(s => Math.max(0, s - 1))} 
-             className="text-slate-500 hover:text-slate-900 font-bold text-xs uppercase flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-slate-100 transition-colors"
-           >
+           <button onClick={goBack} className="text-slate-500 hover:text-slate-900 font-bold text-xs uppercase flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-slate-100 transition-colors">
              <ChevronLeft size={16}/> Atrás
            </button>
 
-           <div className="flex gap-4 items-center">
-             <button 
-               onClick={() => setStep(s => s + 1)} 
-               className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-red-600 transition-all flex items-center gap-2 text-sm uppercase tracking-wide transform hover:-translate-y-1"
-             >
-               Siguiente <ArrowRight size={18} />
-             </button>
-           </div>
+           <button onClick={goNext} className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-red-600 transition-all flex items-center gap-2 text-sm uppercase tracking-wide transform hover:-translate-y-1">
+             Siguiente <ArrowRight size={18} />
+           </button>
         </div>
       </div>
     </div>
   );
 
-  // --- PANTALLAS ---
+  // --- PASOS ---
 
   // 0. LOGIN
   if (step === 0) return (
@@ -193,7 +177,7 @@ export default function App() {
             </div>
             <input className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-red-600 border border-slate-200" placeholder="Cargo (Ej: Administrativo)" onChange={e => setUserData({...userData, cargo: e.target.value})} />
             
-            <button disabled={!userData.nombres || !userData.rut || !userData.dept} onClick={() => setStep(1)} className="w-full bg-red-600 text-white p-5 rounded-xl font-black tracking-widest hover:bg-red-700 transition-all shadow-lg flex justify-center gap-3 mt-6 items-center disabled:opacity-50 disabled:cursor-not-allowed uppercase text-sm">
+            <button disabled={!userData.nombres || !userData.rut || !userData.dept} onClick={goNext} className="w-full bg-red-600 text-white p-5 rounded-xl font-black tracking-widest hover:bg-red-700 transition-all shadow-lg flex justify-center gap-3 mt-6 items-center disabled:opacity-50 disabled:cursor-not-allowed uppercase text-sm">
               Ingresar <ArrowRight size={20}/>
             </button>
           </div>
@@ -206,7 +190,7 @@ export default function App() {
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Mensaje de la Alcaldesa" 
       visual={
         <div className="w-full h-full bg-black flex items-center justify-center">
-           <iframe className="w-full h-full aspect-video" src="https://www.youtube.com/embed/EQUdyb-YVxM" title="Mensaje Alcaldesa" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+           <iframe className="w-full h-full aspect-video" src="https://www.youtube.com/embed/EQUdyb-YVxM?rel=0&modestbranding=1" title="Mensaje Alcaldesa" frameBorder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
         </div>
       }
       content={
@@ -544,7 +528,7 @@ export default function App() {
                <div className="flex items-center justify-center gap-2 text-slate-900 font-bold text-sm bg-slate-100 rounded-full px-4 py-2 inline-block mb-2">
                  <Clock size={14}/> {currentTime.toLocaleTimeString()}
                </div>
-               <p className="font-bold text-slate-900 text-sm">{currentTime.toLocaleDateString()}</p>
+               <p className="font-bold text-slate-900 text-sm">{today}</p>
             </div>
 
             <div className="text-center flex-1">
@@ -560,7 +544,7 @@ export default function App() {
            <button onClick={printCertificate} className="bg-white text-slate-900 px-6 py-4 rounded-full font-bold shadow-xl hover:bg-slate-100 transition-all flex items-center gap-2">
              <Printer size={20}/> Descargar
            </button>
-           <button onClick={() => setStep(11)} className="bg-red-600 text-white px-8 py-4 rounded-full font-bold shadow-xl hover:bg-red-700 transition-all flex items-center gap-2 animate-bounce">
+           <button onClick={goNext} className="bg-red-600 text-white px-8 py-4 rounded-full font-bold shadow-xl hover:bg-red-700 transition-all flex items-center gap-2 animate-bounce">
              Siguiente <ArrowRight size={20}/>
            </button>
         </div>
