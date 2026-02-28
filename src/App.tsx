@@ -4,7 +4,7 @@ import {
   ChevronDown, Shield, Heart, DollarSign, 
   Printer, RefreshCw, User, Map, Briefcase, 
   Building2, Lightbulb, Clock, QrCode, Smartphone, 
-  ArrowRight, AlertCircle, Quote, Play
+  ArrowRight, AlertCircle, Quote
 } from 'lucide-react';
 
 // --- DATOS ---
@@ -39,7 +39,8 @@ const CONCEJALES = [
 export default function App() {
   const [step, setStep] = useState(0); 
   const [userData, setUserData] = useState({ nombres: '', apellidos: '', rut: '', dept: '', cargo: '' });
-  const [canAdvance, setCanAdvance] = useState(true); // ¡Siempre True al inicio para evitar bloqueos!
+  // NOTA: canAdvance inicia en TRUE para no bloquear nunca al usuario si falla el scroll
+  const [canAdvance, setCanAdvance] = useState(true); 
   const [currentTime, setCurrentTime] = useState(new Date());
   
   // Quiz Logic
@@ -51,43 +52,27 @@ export default function App() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const totalSteps = 12;
 
-  // Reloj
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // --- CONTROL DE SCROLL (LÓGICA BLINDADA) ---
+  // Control Visual de Lectura (Solo visual, ya no bloquea el botón)
   const checkProgress = () => {
-    // Si estamos en pasos que NO requieren lectura, forzamos TRUE y salimos
-    if ([0, 1, 9, 10, 11].includes(step)) {
-      setCanAdvance(true);
-      return;
-    }
-
     const el = scrollRef.current;
     if (el) {
-      // Si el usuario bajó casi todo O si el contenido es corto
       const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
-      const isShort = el.scrollHeight <= el.clientHeight + 20;
-      
+      const isShort = el.scrollHeight <= el.clientHeight + 50;
       if (isAtBottom || isShort) setCanAdvance(true);
     }
   };
 
+  // Resetear scroll al cambiar de paso
   useEffect(() => {
-    // Al cambiar de paso:
-    // 1. Si es Login (0), Video (1), Quiz (9), Certificado (10), Final (11) -> ACTIVAR BOTÓN SIEMPRE
-    if ([0, 1, 9, 10, 11].includes(step)) {
-      setCanAdvance(true);
-    } else {
-      // 2. Si es contenido de lectura -> DESACTIVAR y esperar scroll
-      setCanAdvance(false);
-      setTimeout(checkProgress, 800); // Check de seguridad por si es texto corto
-    }
-    
-    // Resetear scroll arriba
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    // Damos feedback visual de "falta leer" pero NO bloqueamos
+    setCanAdvance(false);
+    setTimeout(() => setCanAdvance(true), 1000); // Se activa solo al segundo
   }, [step]);
 
   const handleAnswer = (optionIndex: number) => {
@@ -137,7 +122,7 @@ export default function App() {
             <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Módulo {step}</span>
             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Inducción 2026</span>
           </div>
-          <h2 className="text-3xl lg:text-6xl font-black text-slate-900 leading-[0.9] tracking-tighter mb-2">{title}</h2>
+          <h2 className="text-3xl lg:text-5xl font-black text-slate-900 leading-[0.9] tracking-tighter mb-2">{title}</h2>
           <h3 className="text-lg lg:text-2xl text-slate-500 font-serif italic">{subtitle}</h3>
         </div>
         
@@ -145,20 +130,11 @@ export default function App() {
         <div ref={scrollRef} onScroll={checkProgress} className="flex-1 overflow-y-auto px-8 lg:px-16 py-6 scroll-smooth">
           <div className="space-y-8 text-lg lg:text-xl text-slate-700 leading-relaxed">
             {content}
-            
-            {/* Espaciador Final */}
-            {!canAdvance && (
-              <div className="h-24 flex flex-col items-center justify-center opacity-30">
-                <div className="w-1 h-8 bg-slate-300 rounded-full mb-2"></div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Sigue bajando</span>
-              </div>
-            )}
-            {/* Espacio extra siempre para que no se corte en móvil */}
             <div className="h-12"></div>
           </div>
         </div>
 
-        {/* BOTONERA */}
+        {/* BOTONERA (SIN BLOQUEO) */}
         <div className="px-8 lg:px-16 py-4 border-t border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-20">
            
            <button 
@@ -169,16 +145,9 @@ export default function App() {
            </button>
 
            <div className="flex gap-4 items-center">
-             {!canAdvance && (
-                <span className="text-red-500 text-xs font-bold animate-pulse flex items-center gap-1">
-                  <ChevronDown size={14}/> Baja para avanzar
-                </span>
-             )}
-             
              <button 
-               disabled={!canAdvance} 
                onClick={() => setStep(s => s + 1)} 
-               className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-red-600 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all flex items-center gap-2 text-sm uppercase tracking-wide transform hover:-translate-y-1"
+               className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-red-600 transition-all flex items-center gap-2 text-sm uppercase tracking-wide transform hover:-translate-y-1"
              >
                Siguiente <ArrowRight size={18} />
              </button>
@@ -223,6 +192,7 @@ export default function App() {
               <ChevronDown className="absolute right-4 top-4 text-slate-400 pointer-events-none" size={16}/>
             </div>
             <input className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-red-600 border border-slate-200" placeholder="Cargo (Ej: Administrativo)" onChange={e => setUserData({...userData, cargo: e.target.value})} />
+            
             <button disabled={!userData.nombres || !userData.rut || !userData.dept} onClick={() => setStep(1)} className="w-full bg-red-600 text-white p-5 rounded-xl font-black tracking-widest hover:bg-red-700 transition-all shadow-lg flex justify-center gap-3 mt-6 items-center disabled:opacity-50 disabled:cursor-not-allowed uppercase text-sm">
               Ingresar <ArrowRight size={20}/>
             </button>
@@ -236,8 +206,7 @@ export default function App() {
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Mensaje de la Alcaldesa" 
       visual={
         <div className="w-full h-full bg-black flex items-center justify-center">
-           {/* VIDEO CON AUTOPLAY RESTAURADO (Sin bloquear el botón siguiente) */}
-           <iframe className="w-full h-full aspect-video" src="https://www.youtube.com/embed/EQUdyb-YVxM?autoplay=1&rel=0&modestbranding=1" title="Mensaje Alcaldesa" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+           <iframe className="w-full h-full aspect-video" src="https://www.youtube.com/embed/EQUdyb-YVxM" title="Mensaje Alcaldesa" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
         </div>
       }
       content={
