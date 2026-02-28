@@ -1,0 +1,32 @@
+name: Publicar Portal IMLS
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # INSTALACIÓN SEGURA (Evita las X rojas de conflictos)
+      - name: Instalar Dependencias
+        run: npm install --legacy-peer-deps
+
+      - name: Construir con Vite
+        run: npm run build
+
+      - name: Desplegar
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist  # <--- VITE SIEMPRE USA 'dist'
+          branch: gh-pages
