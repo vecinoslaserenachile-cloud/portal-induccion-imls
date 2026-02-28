@@ -4,7 +4,7 @@ import {
   ChevronDown, Shield, Heart, DollarSign, 
   Printer, RefreshCw, User, Map, Briefcase, 
   Building2, Lightbulb, Clock, QrCode, Smartphone, 
-  ArrowRight, AlertCircle, Quote, PlayCircle
+  ArrowRight, AlertCircle, Quote, Play
 } from 'lucide-react';
 
 // --- DATOS ---
@@ -39,7 +39,7 @@ const CONCEJALES = [
 export default function App() {
   const [step, setStep] = useState(0); 
   const [userData, setUserData] = useState({ nombres: '', apellidos: '', rut: '', dept: '', cargo: '' });
-  const [canAdvance, setCanAdvance] = useState(true); // POR DEFECTO TRUE para evitar bloqueos iniciales
+  const [canAdvance, setCanAdvance] = useState(true); // ¡Siempre True al inicio para evitar bloqueos!
   const [currentTime, setCurrentTime] = useState(new Date());
   
   // Quiz Logic
@@ -57,27 +57,33 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // --- CONTROL DE SCROLL SIMPLE (Sin lógicas complejas) ---
+  // --- CONTROL DE SCROLL (LÓGICA BLINDADA) ---
   const checkProgress = () => {
+    // Si estamos en pasos que NO requieren lectura, forzamos TRUE y salimos
+    if ([0, 1, 9, 10, 11].includes(step)) {
+      setCanAdvance(true);
+      return;
+    }
+
     const el = scrollRef.current;
     if (el) {
       // Si el usuario bajó casi todo O si el contenido es corto
       const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
-      const isShort = el.scrollHeight <= el.clientHeight + 50;
+      const isShort = el.scrollHeight <= el.clientHeight + 20;
       
       if (isAtBottom || isShort) setCanAdvance(true);
     }
   };
 
   useEffect(() => {
-    // SIEMPRE permitir avanzar en Login, Video, Quiz, Certificado y Final
-    // ESTO EVITA QUE EL VIDEO SE QUEDE PEGADO
+    // Al cambiar de paso:
+    // 1. Si es Login (0), Video (1), Quiz (9), Certificado (10), Final (11) -> ACTIVAR BOTÓN SIEMPRE
     if ([0, 1, 9, 10, 11].includes(step)) {
       setCanAdvance(true);
     } else {
+      // 2. Si es contenido de lectura -> DESACTIVAR y esperar scroll
       setCanAdvance(false);
-      // Dar un segundo antes de verificar scroll en las otras láminas
-      setTimeout(checkProgress, 1000);
+      setTimeout(checkProgress, 800); // Check de seguridad por si es texto corto
     }
     
     // Resetear scroll arriba
@@ -106,7 +112,7 @@ export default function App() {
 
   const printCertificate = () => window.print();
 
-  // --- LAYOUT MAESTRO (Diseño Sólido) ---
+  // --- LAYOUT MAESTRO ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="h-screen w-full flex flex-col lg:flex-row bg-slate-50 text-slate-900 overflow-hidden font-sans">
       
@@ -117,7 +123,6 @@ export default function App() {
       
       {/* VISUAL (Izquierda PC / Arriba Móvil) */}
       <div className="lg:order-2 lg:w-1/2 w-full lg:h-full h-[35vh] bg-slate-100 flex items-center justify-center relative p-0 lg:p-12 border-b lg:border-b-0 lg:border-l border-slate-200">
-        {/* Contenedor Visual con Sombra */}
         <div className="w-full h-full lg:rounded-3xl overflow-hidden shadow-none lg:shadow-2xl bg-white relative">
            {visual}
         </div>
@@ -136,20 +141,24 @@ export default function App() {
           <h3 className="text-lg lg:text-2xl text-slate-500 font-serif italic">{subtitle}</h3>
         </div>
         
-        {/* CUERPO TEXTO (Scroll) */}
+        {/* CUERPO TEXTO */}
         <div ref={scrollRef} onScroll={checkProgress} className="flex-1 overflow-y-auto px-8 lg:px-16 py-6 scroll-smooth">
           <div className="space-y-8 text-lg lg:text-xl text-slate-700 leading-relaxed">
             {content}
             
-            {/* Espaciador Final para asegurar que el botón no tape texto */}
-            <div className="h-24 flex flex-col items-center justify-center opacity-30">
-              <div className="w-1 h-8 bg-slate-300 rounded-full mb-2"></div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Fin de lectura</span>
-            </div>
+            {/* Espaciador Final */}
+            {!canAdvance && (
+              <div className="h-24 flex flex-col items-center justify-center opacity-30">
+                <div className="w-1 h-8 bg-slate-300 rounded-full mb-2"></div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Sigue bajando</span>
+              </div>
+            )}
+            {/* Espacio extra siempre para que no se corte en móvil */}
+            <div className="h-12"></div>
           </div>
         </div>
 
-        {/* BOTONERA (Siempre visible abajo) */}
+        {/* BOTONERA */}
         <div className="px-8 lg:px-16 py-4 border-t border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-20">
            
            <button 
@@ -160,7 +169,6 @@ export default function App() {
            </button>
 
            <div className="flex gap-4 items-center">
-             {/* Indicador de lectura (Solo aparece si falta leer) */}
              {!canAdvance && (
                 <span className="text-red-500 text-xs font-bold animate-pulse flex items-center gap-1">
                   <ChevronDown size={14}/> Baja para avanzar
@@ -185,7 +193,6 @@ export default function App() {
   // 0. LOGIN
   if (step === 0) return (
     <div className="h-screen w-full flex items-center justify-center bg-slate-900 relative overflow-hidden">
-      {/* Fondo Estático Seguro */}
       <div className="absolute inset-0 z-0">
         <img src="/img/portada.jpg" onError={(e) => e.currentTarget.src='https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070'} className="w-full h-full object-cover opacity-20" alt="Fondo" />
         <div className="absolute inset-0 bg-slate-900/50"></div>
@@ -203,14 +210,11 @@ export default function App() {
         <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl flex-1 border-4 border-slate-800">
           <div className="space-y-4">
             <h3 className="text-slate-900 font-black text-2xl mb-6 flex items-center gap-2 uppercase">Registro</h3>
-            
             <div className="grid grid-cols-2 gap-3">
                <input className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-red-600 border border-slate-200" placeholder="Nombres" onChange={e => setUserData({...userData, nombres: e.target.value})} />
                <input className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-red-600 border border-slate-200" placeholder="Apellidos" onChange={e => setUserData({...userData, apellidos: e.target.value})} />
             </div>
-            
             <input className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-red-600 border border-slate-200" placeholder="RUT (12.345.678-9)" onChange={e => setUserData({...userData, rut: e.target.value})} />
-
             <div className="relative">
               <select className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm appearance-none outline-none focus:ring-2 focus:ring-red-600 border border-slate-200 cursor-pointer" onChange={e => setUserData({...userData, dept: e.target.value})}>
                 <option value="">Selecciona Unidad...</option>
@@ -218,9 +222,7 @@ export default function App() {
               </select>
               <ChevronDown className="absolute right-4 top-4 text-slate-400 pointer-events-none" size={16}/>
             </div>
-            
             <input className="w-full p-4 rounded-xl bg-slate-100 font-bold text-slate-900 text-sm outline-none focus:ring-2 focus:ring-red-600 border border-slate-200" placeholder="Cargo (Ej: Administrativo)" onChange={e => setUserData({...userData, cargo: e.target.value})} />
-            
             <button disabled={!userData.nombres || !userData.rut || !userData.dept} onClick={() => setStep(1)} className="w-full bg-red-600 text-white p-5 rounded-xl font-black tracking-widest hover:bg-red-700 transition-all shadow-lg flex justify-center gap-3 mt-6 items-center disabled:opacity-50 disabled:cursor-not-allowed uppercase text-sm">
               Ingresar <ArrowRight size={20}/>
             </button>
@@ -234,22 +236,19 @@ export default function App() {
     case 1: return <ChapterLayout title="Bienvenida" subtitle="Mensaje de la Alcaldesa" 
       visual={
         <div className="w-full h-full bg-black flex items-center justify-center">
-           {/* IFRAME ESTÁNDAR: El más compatible de todos. */}
-           <iframe className="w-full h-full aspect-video" src="https://www.youtube.com/embed/EQUdyb-YVxM?rel=0&modestbranding=1" title="Mensaje Alcaldesa" frameBorder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+           {/* VIDEO CON AUTOPLAY RESTAURADO (Sin bloquear el botón siguiente) */}
+           <iframe className="w-full h-full aspect-video" src="https://www.youtube.com/embed/EQUdyb-YVxM?autoplay=1&rel=0&modestbranding=1" title="Mensaje Alcaldesa" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
         </div>
       }
       content={
         <div>
            <p className="font-black text-4xl text-slate-900 mb-6">¡Hola, {userData.nombres}!</p>
-           
            <p className="mb-8 text-xl font-light text-slate-600">Te sumas a una institución con historia. La Serena no es solo la segunda ciudad más antigua de Chile; es una capital patrimonial que exige lo mejor de nosotros.</p>
-           
            <div className="bg-red-50 p-8 rounded-3xl border-l-8 border-red-600 mb-10">
              <Quote className="text-red-400 mb-4" size={40}/>
              <p className="text-2xl font-serif italic text-red-900 leading-relaxed">"Nuestro compromiso es modernizar la gestión municipal. Queremos funcionarios proactivos, empáticos y que entiendan que detrás de cada papel hay una familia."</p>
              <p className="text-right font-bold text-red-700 mt-4 text-sm uppercase">- Daniela Norambuena, Alcaldesa</p>
            </div>
-
            <p className="font-black text-slate-900 text-xl mb-6 uppercase tracking-wider">Tu ruta de aprendizaje:</p>
            <ul className="space-y-4">
              <li className="flex items-center gap-4 text-lg bg-slate-50 p-4 rounded-xl"><div className="bg-green-100 p-2 rounded-full text-green-600"><CheckCircle size={20}/></div> Nuestra Misión y Valores.</li>
@@ -278,20 +277,16 @@ export default function App() {
       content={
         <>
           <p className="text-3xl font-light text-slate-500 mb-10">Para remar todos hacia el mismo lado, debemos tener clara nuestra brújula.</p>
-          
           <h4 className="font-black text-slate-900 text-2xl mb-8 uppercase tracking-wide">Nuestros Valores Intransables:</h4>
-          
           <div className="grid gap-6">
              <div className="flex gap-6 items-start p-6 bg-slate-50 rounded-3xl border border-slate-100">
                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-red-600 font-black text-3xl shrink-0 shadow-md border border-slate-100">1</div>
                <div><h4 className="font-black text-slate-900 text-xl mb-2">Probidad</h4><p className="text-slate-600 text-lg">Actuamos con rectitud intachable. Los recursos municipales son sagrados y pertenecen a todos los vecinos.</p></div>
              </div>
-             
              <div className="flex gap-6 items-start p-6 bg-slate-50 rounded-3xl border border-slate-100">
                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-blue-600 font-black text-3xl shrink-0 shadow-md border border-slate-100">2</div>
                <div><h4 className="font-black text-slate-900 text-xl mb-2">Cercanía</h4><p className="text-slate-600 text-lg">No somos burócratas, somos servidores públicos. Empatizamos con el problema del otro.</p></div>
              </div>
-
              <div className="flex gap-6 items-start p-6 bg-slate-50 rounded-3xl border border-slate-100">
                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-green-600 font-black text-3xl shrink-0 shadow-md border border-slate-100">3</div>
                <div><h4 className="font-black text-slate-900 text-xl mb-2">Transparencia</h4><p className="text-slate-600 text-lg">Nuestros actos son públicos. Informamos con claridad y oportundidad a la comunidad.</p></div>
@@ -321,7 +316,6 @@ export default function App() {
       content={
         <>
           <p className="mb-8 text-xl font-light">La administración comunal no la ejerce sola la Alcaldesa. Existe un <strong>Concejo Municipal</strong>, compuesto por <strong>10 concejales</strong> electos por votación popular.</p>
-          
           <div className="bg-yellow-50 border border-yellow-200 p-8 rounded-[2rem] mb-8">
              <h4 className="font-black text-yellow-900 text-xl mb-6 flex items-center gap-3"><Shield className="text-yellow-600" size={32}/> ¿QUÉ HACEN?</h4>
              <ul className="space-y-6">
@@ -348,20 +342,16 @@ export default function App() {
       content={
         <>
           <p className="mb-8 text-xl font-light">Somos una institución grande y compleja. Entender el organigrama es vital para saber a quién acudir y respetar los conductos regulares.</p>
-          
           <h4 className="font-black text-slate-900 text-2xl mb-6 uppercase tracking-wide">Direcciones Clave:</h4>
-          
           <div className="grid gap-6">
              <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl">
                 <div className="bg-red-100 p-4 rounded-2xl text-red-600 shrink-0"><Heart size={32}/></div>
                 <div><h4 className="font-black text-slate-900 text-xl">DIDECO (Desarrollo Comunitario)</h4><p className="text-lg text-slate-500 mt-2">El "corazón social". Gestiona ayudas sociales, organizaciones comunitarias y subsidios.</p></div>
              </div>
-             
              <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl">
                 <div className="bg-blue-100 p-4 rounded-2xl text-blue-600 shrink-0"><Building2 size={32}/></div>
                 <div><h4 className="font-black text-slate-900 text-xl">DOM (Obras Municipales)</h4><p className="text-lg text-slate-500 mt-2">El brazo técnico. Otorga permisos de edificación, recepciones finales y fiscaliza construcciones.</p></div>
              </div>
-             
              <div className="flex items-start gap-6 p-6 bg-white border border-slate-200 shadow-sm rounded-3xl">
                 <div className="bg-green-100 p-4 rounded-2xl text-green-600 shrink-0"><Map size={32}/></div>
                 <div><h4 className="font-black text-slate-900 text-xl">SECPLAN (Planificación)</h4><p className="text-lg text-slate-500 mt-2">El "cerebro". Diseña los proyectos de inversión (plazas, pavimentos, estadios).</p></div>
@@ -373,8 +363,8 @@ export default function App() {
 
     case 5: return <ChapterLayout title="Ecosistema" subtitle="Mapa de Públicos" 
       visual={
-        <div className="relative w-full h-full flex items-center justify-center bg-slate-900 overflow-hidden">
-           <div className="absolute w-[600px] h-[600px] border border-slate-700 rounded-full opacity-20"></div>
+        <div className="relative w-full h-full flex items-center justify-center bg-slate-900 overflow-hidden rounded-2xl">
+           <div className="absolute w-[600px] h-[600px] border border-slate-700 rounded-full opacity-30"></div>
            <div className="z-20 bg-white text-slate-900 w-32 h-32 rounded-full flex items-center justify-center font-black text-2xl shadow-[0_0_50px_white]">IMLS</div>
            <div className="absolute top-[15%] left-[20%] bg-blue-500/20 p-4 rounded-xl border border-blue-500/50 flex flex-col items-center gap-2"><User className="text-blue-400" size={32}/><span className="text-sm font-bold text-blue-200 uppercase">Vecinos</span></div>
            <div className="absolute bottom-[20%] right-[15%] bg-green-500/20 p-4 rounded-xl border border-green-500/50 flex flex-col items-center gap-2"><Briefcase className="text-green-400" size={32}/><span className="text-sm font-bold text-green-200 uppercase">Empresas</span></div>
@@ -384,41 +374,28 @@ export default function App() {
       content={
         <>
           <p className="text-xl mb-8 font-light">No somos una isla. El municipio es un organismo vivo que interactúa 24/7 con su entorno.</p>
-          
           <div className="space-y-8">
             <div className="flex gap-6">
               <div className="w-2 bg-blue-500 rounded-full"></div>
-              <div>
-                <h4 className="font-black text-slate-900 text-2xl mb-2">1. El Vecino (Nuestro Centro)</h4>
-                <p className="text-slate-600 text-lg">Es la razón de ser del municipio. Todo proceso debe pensarse para facilitarle la vida.</p>
-              </div>
+              <div><h4 className="font-black text-slate-900 text-2xl mb-2">1. El Vecino (Nuestro Centro)</h4><p className="text-slate-600 text-lg">Es la razón de ser del municipio. Todo proceso debe pensarse para facilitarle la vida.</p></div>
             </div>
-
             <div className="flex gap-6">
                <div className="w-2 bg-green-500 rounded-full"></div>
-               <div>
-                 <h4 className="font-black text-slate-900 text-2xl mb-2">2. Proveedores y Privados</h4>
-                 <p className="text-slate-600 text-lg">Socios estratégicos. Sin ellos no podríamos construir obras o retirar la basura.</p>
-               </div>
+               <div><h4 className="font-black text-slate-900 text-2xl mb-2">2. Proveedores y Privados</h4><p className="text-slate-600 text-lg">Socios estratégicos. Sin ellos no podríamos construir obras o retirar la basura.</p></div>
             </div>
-
             <div className="flex gap-6">
                <div className="w-2 bg-purple-500 rounded-full"></div>
-               <div>
-                 <h4 className="font-black text-slate-900 text-2xl mb-2">3. Otras Instituciones</h4>
-                 <p className="text-slate-600 text-lg">Carabineros, Bomberos, Gobierno Regional. La coordinación con ellos es vital.</p>
-               </div>
+               <div><h4 className="font-black text-slate-900 text-2xl mb-2">3. Otras Instituciones</h4><p className="text-slate-600 text-lg">Carabineros, Bomberos, Gobierno Regional. La coordinación con ellos es vital.</p></div>
             </div>
           </div>
         </>
       } 
     />;
 
-    case 6: return <ChapterLayout title="Remuneraciones" subtitle="Somos un Solo Equipo" visual={<div className="flex items-center justify-center h-full bg-green-50"><DollarSign size={200} className="text-green-600/50" /></div>} 
+    case 6: return <ChapterLayout title="Remuneraciones" subtitle="Somos un Solo Equipo" visual={<div className="flex items-center justify-center h-full bg-green-50 rounded-2xl"><DollarSign size={200} className="text-green-600/50" /></div>} 
       content={
         <>
           <p className="mb-8 text-2xl font-light">En el municipio conviven distintas modalidades contractuales, pero quiero que sepas algo: <strong>todos somos compañeros de trabajo</strong> con la misma camiseta.</p>
-          
           <div className="grid gap-6">
              <div className="p-8 bg-white border border-slate-200 rounded-[2rem] shadow-sm hover:border-green-300 transition-colors">
                <div className="flex justify-between mb-4 items-center">
@@ -427,7 +404,6 @@ export default function App() {
                </div>
                <p className="text-slate-600 text-lg">Son funcionarios públicos. Su sueldo se paga religiosamente el <strong>penúltimo día hábil del mes</strong>.</p>
              </div>
-             
              <div className="p-8 bg-white border border-slate-200 rounded-[2rem] shadow-sm hover:border-blue-300 transition-colors">
                <div className="flex justify-between mb-4 items-center">
                  <strong className="text-slate-900 font-black uppercase tracking-wide text-lg">Honorarios</strong>
@@ -436,7 +412,6 @@ export default function App() {
                <p className="text-slate-600 text-lg">Prestadores de servicios. La fecha de pago es variable (generalmente primeros días del mes siguiente) y depende de la entrega oportuna del <strong>Informe de Actividades</strong>.</p>
              </div>
           </div>
-          
           <div className="mt-10 p-6 bg-slate-50 rounded-2xl border-l-8 border-slate-300">
              <p className="text-lg italic text-slate-500 font-serif">"La calidad jurídica no define tu valor como persona ni tu aporte a la ciudad. El respeto es transversal."</p>
           </div>
@@ -444,11 +419,10 @@ export default function App() {
       } 
     />;
 
-    case 7: return <ChapterLayout title="Ley Karin" subtitle="Dignidad y Respeto" visual={<div className="flex items-center justify-center h-full bg-pink-50"><Heart size={200} className="text-pink-400/50" /></div>} 
+    case 7: return <ChapterLayout title="Ley Karin" subtitle="Dignidad y Respeto" visual={<div className="flex items-center justify-center h-full bg-pink-50 rounded-2xl"><Heart size={200} className="text-pink-400/50" /></div>} 
       content={
         <>
           <p className="mb-8 text-2xl font-light">La <strong>Ley N° 21.643</strong> establece un nuevo estándar. Tenemos <strong>Tolerancia Cero</strong> con:</p>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <div className="bg-pink-50 p-6 rounded-3xl text-center border border-pink-100">
                <span className="text-5xl block mb-4">🚫</span>
@@ -463,7 +437,6 @@ export default function App() {
                <p className="font-bold text-pink-900 text-lg uppercase">Violencia</p>
             </div>
           </div>
-          
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
             <h5 className="font-black text-slate-900 text-xl mb-3">¿Qué cambia?</h5>
             <p className="text-slate-600 text-lg">Ya no necesitas demostrar que el acoso fue "reiterado". <strong>Un solo acto grave es suficiente</strong> para denunciar. El municipio cuenta con protocolos estrictos y confidenciales para protegerte.</p>
@@ -472,11 +445,10 @@ export default function App() {
       } 
     />;
 
-    case 8: return <ChapterLayout title="Seguridad Laboral" subtitle="Tu vida es primero" visual={<div className="flex items-center justify-center h-full bg-yellow-50"><Shield size={200} className="text-yellow-500/50" /></div>} 
+    case 8: return <ChapterLayout title="Seguridad Laboral" subtitle="Tu vida es primero" visual={<div className="flex items-center justify-center h-full bg-yellow-50 rounded-2xl"><Shield size={200} className="text-yellow-500/50" /></div>} 
       content={
         <>
           <p className="mb-8 text-2xl font-light">Trabajar seguros es responsabilidad de todos. Aquí tienes las reglas de oro que pueden salvarte la vida.</p>
-          
           <div className="space-y-8">
              <div className="flex gap-6 items-start">
                <div className="bg-blue-100 p-4 rounded-2xl text-blue-600 shrink-0"><MapPin size={32}/></div>
@@ -485,7 +457,6 @@ export default function App() {
                  <p className="text-slate-600 text-lg">La Serena es costera. Ante un sismo fuerte, evacúa inmediatamente hacia la <strong>Cota 30</strong> (Desde Av. Cisternas hacia arriba).</p>
                </div>
              </div>
-
              <div className="flex gap-6 items-start">
                <div className="bg-red-100 p-4 rounded-2xl text-red-600 shrink-0"><AlertCircle size={32}/></div>
                <div>
@@ -569,7 +540,7 @@ export default function App() {
     // 10. CERTIFICADO
     case 10: return (
       <div className="min-h-screen bg-slate-800 flex items-center justify-center p-4">
-        <div className="bg-white p-8 md:p-16 max-w-5xl w-full aspect-[1.4/1] relative shadow-2xl flex flex-col items-center justify-between text-center border-[12px] border-double border-slate-200">
+        <div className="bg-white p-8 md:p-16 max-w-5xl w-full aspect-[1.4/1] relative shadow-2xl flex flex-col items-center justify-between text-center border-[12px] border-double border-slate-200 print:w-full print:h-screen print:border-none print:shadow-none print:absolute print:top-0 print:left-0 print:m-0 print:p-0">
           
           <div className="w-full flex justify-between items-start mb-4 opacity-90">
              <img src="/img/escudo.png" onError={(e) => e.currentTarget.style.display='none'} className="h-16 md:h-24 object-contain" alt="Escudo"/>
@@ -632,13 +603,13 @@ export default function App() {
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 relative overflow-hidden text-center text-white font-sans">
         <div className="absolute inset-0 bg-[url('/img/portada.jpg')] opacity-20 bg-cover"></div>
         
-        <div className="relative z-10 max-w-4xl w-full bg-white/10 backdrop-blur-2xl p-10 md:p-16 rounded-[3rem] border border-white/10 shadow-2xl">
+        <div className="relative z-10 max-w-4xl w-full bg-white/5 backdrop-blur-2xl p-10 md:p-16 rounded-[3rem] border border-white/10 shadow-2xl">
            <Smartphone size={60} className="mx-auto mb-6 text-cyan-400" />
            <h2 className="text-4xl md:text-6xl font-black mb-4 tracking-tight">¡Sigue Conectado!</h2>
            <p className="text-xl md:text-2xl text-slate-300 mb-10 max-w-2xl mx-auto font-light">La inducción termina, pero tu vida funcionaria recién comienza. Únete a nuestra comunidad digital.</p>
            
            <div className="bg-white p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8 shadow-xl text-slate-900">
-              <div className="bg-slate-900 p-6 rounded-2xl shrink-0">
+              <div className="bg-slate-900 p-6 rounded-2xl shrink-0 shadow-inner">
                 <QrCode size={120} className="text-white"/>
               </div>
               <div className="text-left flex-1 space-y-4">
