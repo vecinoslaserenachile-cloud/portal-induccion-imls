@@ -1,30 +1,74 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Inducción IMLS 2026 - Smart City</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMLS 2026 - Portal de Inducción</title>
+    
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="logo-container">
+                <h1>IMLS 2026</h1>
+                <p>PORTAL DE INDUCCIÓN</p>
+            </div>
+            <div class="footer-sidebar">
+                <p>Radio Digital La Serena</p>
+                <span>Transmisión Oficial RDMLS</span>
+            </div>
+        </div>
 
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+        <div class="content-area">
+            
+            <section id="step-1" class="step active">
+                <h2>Ficha del Funcionario</h2>
+                <p>Completa tus datos para iniciar el proceso de 15 capítulos.</p>
+                <form id="ficha-form">
+                    <div class="row">
+                        <input type="text" placeholder="Nombres" required>
+                        <input type="text" placeholder="Apellidos" required>
+                    </div>
+                    <div class="row">
+                        <input type="date" placeholder="dd-mm-aaaa">
+                        <input type="text" placeholder="WhatsApp +569...">
+                    </div>
+                    <input type="email" placeholder="Correo electrónico institucional">
+                    <input type="text" placeholder="Dirección particular">
+                    <select>
+                        <option value="">Selecciona tu Departamento...</option>
+                        <option value="salud">Salud</option>
+                        <option value="dideco">DIDECO</option>
+                        <option value="seguridad">Seguridad Ciudadana</option>
+                    </select>
+                    <button type="button" class="btn-next" onclick="nextStep(2)">Ingresar al Portal</button>
+                </form>
+            </section>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+            <section id="step-2" class="step">
+                <h2>Bienvenida</h2>
+                <p>Contenido del segundo capítulo...</p>
+                <button type="button" class="btn-next" onclick="nextStep(3)">Continuar</button>
+            </section>
 
-    <style>
-      /* BLOQUEO DE PANTALLA COMPLETA */
-      html, body, #root {
-        height: 100vh;
-        width: 100vw;
-        margin: 0;
-        padding: 0;
-        overflow: hidden; /* Evita que la página 'baile' */
-        background-color: #f8fafc;
-      }
-      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+            <section id="step-3" class="step">
+                <h2>La Lucha Municipalidad</h2>
+                <div class="content-box">
+                    <p>Contenido histórico y de gestión municipal.</p>
+                </div>
+                <button type="button" class="btn-next" onclick="nextStep(4)">Finalizar Capítulo</button>
+            </section>
+
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <p>SMART CITY IMLS 2026</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
 </html>
