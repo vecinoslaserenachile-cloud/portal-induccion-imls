@@ -10,7 +10,7 @@ import {
   Eye, Info, HardHat, BookOpen, Globe
 } from 'lucide-react';
 
-// --- DATOS MUNICIPALES ---
+// --- DATOS MAESTROS ---
 const DEPARTAMENTOS = ["Alcaldía", "Administración Municipal", "Secretaría Municipal", "SECPLAN", "DIDECO", "Dirección de Obras (DOM)", "Gestión de Personas", "Seguridad Ciudadana", "Tránsito", "Turismo y Patrimonio", "Servicio a la Comunidad", "Salud", "Educación", "Jurídica", "Control"];
 
 const CONCEJALES = ["Cristian Marín", "Rayen Pojomovsky", "Alejandro Astudillo", "Gladys Marín", "Francisca Barahona", "María Teresita Prouvay", "Camilo Araya", "María Marcela Damke", "Matías Espinosa", "Luisa Jinete"];
@@ -28,53 +28,6 @@ const QUESTIONS = [
   { q: "¿Qué hacer al terminar?", options: ["Irse", "Unirse a la Comunidad Digital", "Nada"], ans: 1, explanation: "¡Bienvenido! Súmate a nuestras redes y portales." },
 ];
 
-// --- COMPONENTE DE VIDEO BLINDADO (LA SOLUCIÓN) ---
-const VideoPlayer = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // Si el usuario ya hizo clic, mostramos el video REAL
-  if (isPlaying) {
-    return (
-      <div className="w-full h-full bg-black rounded-[2rem] overflow-hidden shadow-2xl animate-in fade-in duration-500">
-        <iframe 
-          className="w-full h-full aspect-video" 
-          src="https://www.youtube.com/embed/EQUdyb-YVxM?autoplay=1&rel=0&modestbranding=1&playsinline=1" 
-          title="Mensaje Alcaldesa" 
-          frameBorder="0" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-          allowFullScreen
-        ></iframe>
-      </div>
-    );
-  }
-
-  // Si no ha hecho clic, mostramos la PORTADA ESTÁTICA (Cero consumo de recursos, cero loops)
-  return (
-    <div 
-      className="w-full h-full relative cursor-pointer group rounded-[2rem] overflow-hidden shadow-2xl bg-slate-900 flex items-center justify-center border border-white/20"
-      onClick={() => setIsPlaying(true)}
-    >
-      {/* Imagen de portada de alta calidad */}
-      <img 
-        src="https://img.youtube.com/vi/EQUdyb-YVxM/maxresdefault.jpg" 
-        className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700"
-        alt="Portada Video"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-      
-      {/* Botón de Play Gigante */}
-      <div className="relative z-10 flex flex-col items-center gap-4">
-        <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(220,38,38,0.8)] group-hover:scale-110 transition-transform duration-300">
-          <Play size={40} fill="white" className="text-white ml-2" />
-        </div>
-        <div className="text-center bg-black/60 px-6 py-2 rounded-full backdrop-blur-md">
-          <p className="text-white font-black uppercase tracking-[0.2em] text-lg">VER SALUDO</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // --- APP PRINCIPAL ---
 export default function App() {
   const [step, setStep] = useState(0); 
@@ -83,7 +36,7 @@ export default function App() {
     dept: 'SECPLAN', cargo: 'Director de Innovación', email: 'rodrigo.godoy@laserena.cl' 
   });
   const [canAdvance, setCanAdvance] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [showVideo, setShowVideo] = useState(false); // Estado para cambiar entre foto y video
   
   // Quiz
   const [quizIndex, setQuizIndex] = useState(0);
@@ -93,11 +46,7 @@ export default function App() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
+  // Scroll Handler
   const handleScroll = (e: any) => {
     const el = e.target;
     if (el.scrollHeight - el.scrollTop <= el.clientHeight + 150) {
@@ -106,7 +55,8 @@ export default function App() {
   };
 
   useEffect(() => {
-    if ([0, 1, 11, 12].includes(step)) {
+    // Pasos libres de bloqueo (Login, Fotos, Finales)
+    if ([0, 1, 2, 12, 13].includes(step)) {
       setCanAdvance(true);
     } else {
       setCanAdvance(false);
@@ -114,13 +64,15 @@ export default function App() {
         if (scrollRef.current && scrollRef.current.scrollHeight <= scrollRef.current.clientHeight + 50) {
           setCanAdvance(true);
         }
-      }, 1000);
+      }, 1500);
     }
+    // Reset
     window.scrollTo(0, 0);
     if(scrollRef.current) scrollRef.current.scrollTop = 0;
+    setShowVideo(false); // Resetear video al cambiar paso
   }, [step]);
 
-  const goNext = () => canAdvance && setStep(s => Math.min(s + 1, 12));
+  const goNext = () => canAdvance && setStep(s => Math.min(s + 1, 13));
   const goBack = () => setStep(s => Math.max(0, s - 1));
 
   const handleAnswer = (idx: number) => {
@@ -133,28 +85,22 @@ export default function App() {
     }
   };
 
-  const printCertificate = () => window.print();
-
   // --- LAYOUT ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
     <div className="flex flex-col h-[100dvh] w-full bg-slate-950 text-slate-100 font-sans overflow-hidden">
-      
-      {/* Barra Progreso */}
       <div className="fixed top-0 left-0 w-full h-1.5 bg-slate-800 z-[100]">
-        <div className="h-full bg-gradient-to-r from-red-600 to-orange-500 shadow-[0_0_20px_red] transition-all duration-700" style={{ width: `${(step / 12) * 100}%` }}></div>
+        <div className="h-full bg-gradient-to-r from-red-600 to-orange-500 shadow-[0_0_20px_red] transition-all duration-700" style={{ width: `${(step / 13) * 100}%` }}></div>
       </div>
       
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* VISUAL (Arriba móvil / Izq PC) */}
-        <div className="w-full lg:w-1/2 h-[35vh] lg:h-full bg-slate-900 flex items-center justify-center p-4 lg:p-12 relative border-b lg:border-b-0 lg:border-r border-white/5 z-10">
+        <div className="w-full lg:w-1/2 h-[40vh] lg:h-full bg-slate-900 flex items-center justify-center p-0 lg:p-12 relative border-b lg:border-b-0 lg:border-r border-white/5 z-10">
            <div className="w-full h-full lg:rounded-[3rem] overflow-hidden shadow-2xl bg-black border border-white/10 flex items-center justify-center relative">
              {visual}
            </div>
         </div>
 
-        {/* CONTENIDO (Abajo móvil / Der PC) */}
-        <div className="w-full lg:w-1/2 flex flex-col h-[65vh] lg:h-full bg-slate-950 overflow-hidden relative z-20">
-          <div className="px-8 lg:px-16 pt-10 pb-6 shrink-0 border-b border-white/5 bg-slate-950/95 backdrop-blur-md">
+        <div className="w-full lg:w-1/2 flex flex-col h-[60vh] lg:h-full bg-slate-950 overflow-hidden relative z-20">
+          <div className="px-8 lg:px-16 pt-8 pb-4 shrink-0 border-b border-white/5 bg-slate-950/95 backdrop-blur-md">
              <div className="flex items-center gap-3 mb-2">
                 <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">PASO {step}</span>
                 <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest pl-2 border-l border-white/20">INDUCCIÓN 2026</span>
@@ -179,7 +125,7 @@ export default function App() {
           <div className="flex items-center gap-6">
             {!canAdvance && (
                <div className="hidden sm:flex items-center gap-2 text-red-500 text-[10px] font-black uppercase tracking-widest animate-pulse">
-                 <ChevronDown size={20}/> Desliza para avanzar
+                 <ChevronDown size={20}/> Desliza
                </div>
             )}
             <button 
@@ -199,7 +145,7 @@ export default function App() {
 
   // --- PASO 0: LOGIN ---
   if (step === 0) return (
-    <div className="h-screen w-full flex items-center justify-center bg-slate-950 relative overflow-hidden font-sans">
+    <div className="h-[100dvh] w-full flex items-center justify-center bg-slate-950 relative overflow-hidden font-sans">
       <div className="absolute inset-0 bg-[url('/img/portada.jpg')] bg-cover opacity-30 blur-md scale-110"></div>
       <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900/90 to-transparent"></div>
       
@@ -229,32 +175,62 @@ export default function App() {
   );
 
   switch (step) {
-    case 1: return <ChapterLayout title="Bienvenida" subtitle="Daniela Norambuena, Alcaldesa" 
-      visual={<VideoPlayer />}
-      content={<><p className="font-black text-5xl text-white mb-8 italic tracking-tighter">¡Hola, {userData.nombres}!</p><p>Te damos la bienvenida a la **Ilustre Municipalidad de La Serena**. Te sumas a una institución con más de 480 años de historia, pero con una visión de futuro moderna e innovadora.</p><div className="bg-red-600/20 p-8 rounded-3xl border-l-4 border-red-600 italic text-xl text-red-100">"Nuestra gestión pone al vecino en el centro. Buscamos funcionarios proactivos, empáticos y modernos."</div><p className="text-slate-400 text-sm mt-4">Haz clic en el video para ver el saludo oficial.</p></>} 
+    // 1. GRAN FAMILIA MUNICIPAL (FOTO GRUPAL)
+    case 1: return <ChapterLayout title="Somos IMLS" subtitle="La Gran Familia Municipal" 
+      visual={<img src="/img/faro_grupo.jpg" className="w-full h-full object-cover rounded-[3rem] shadow-2xl" onError={(e) => e.currentTarget.src='https://placehold.co/1000x800/111/fff?text=FOTO+GRUPAL+1800+FUNCIONARIOS'}/>}
+      content={<><p className="font-black text-5xl text-white mb-8 italic tracking-tighter">¡Hola, {userData.nombres}!</p><p className="text-2xl">Bienvenido a la **Ilustre Municipalidad de La Serena**. Hoy te integras a un equipo de más de 1.800 funcionarios comprometidos con el servicio público.</p><div className="bg-blue-600/20 p-8 rounded-3xl border-l-4 border-blue-500 italic text-xl text-blue-100">"Somos el rostro del Estado ante la comunidad. Cada uno de nosotros es vital para el funcionamiento de la ciudad."</div></>} 
     />;
 
-    case 2: return <ChapterLayout title="Estrategia" subtitle="Misión y Visión" 
+    // 2. BIENVENIDA ALCALDESA (FOTO POR DEFECTO - VIDEO OPCIONAL)
+    case 2: return <ChapterLayout title="Liderazgo" subtitle="Mensaje de la Alcaldesa" 
+      visual={
+        <div className="w-full h-full bg-black rounded-[3rem] overflow-hidden shadow-2xl border border-white/20 relative">
+          {!showVideo ? (
+             // FOTO POR DEFECTO (CERO RIESGO)
+             <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowVideo(true)}>
+                <img src="/img/alcaldesa_foto.jpg" className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" onError={(e) => e.currentTarget.src='https://placehold.co/800x1000/333/fff?text=FOTO+ALCALDESA'} />
+                <div className="absolute inset-0 flex items-center justify-center">
+                   <div className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(220,38,38,0.8)] animate-pulse">
+                      <Play size={40} fill="white" className="ml-2 text-white"/>
+                   </div>
+                </div>
+                <p className="absolute bottom-10 left-0 w-full text-center text-white font-black tracking-widest uppercase text-sm">Clic para ver saludo</p>
+             </div>
+          ) : (
+             // SOLO CARGA SI EL USUARIO PIDE EL VIDEO
+             <iframe className="w-full h-full" src="https://www.youtube.com/embed/EQUdyb-YVxM?autoplay=1" title="Mensaje" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen></iframe>
+          )}
+        </div>
+      }
+      content={<><p className="font-black text-4xl text-white mb-6 italic tracking-tighter">Daniela Norambuena</p><p className="text-xl font-light">"Te invito a trabajar con pasión y compromiso. Nuestra gestión pone al vecino en el centro de todas las decisiones. Buscamos funcionarios proactivos, empáticos y modernos."</p><div className="mt-8 p-6 bg-white/5 rounded-2xl border border-white/10"><p className="italic text-sm text-slate-400">Escucha el mensaje completo activando el video.</p></div></>} 
+    />;
+
+    // 3. ESTRATEGIA
+    case 3: return <ChapterLayout title="Estrategia" subtitle="Misión y Visión" 
       visual={<div className="flex flex-col gap-10 items-center p-12 text-center"><Target size={140} className="text-red-600 animate-pulse"/><h4 className="font-black text-6xl uppercase tracking-tighter text-white leading-none italic">RUMBO<br/>2026</h4></div>}
       content={<><section className="space-y-4"><h4 className="text-red-500 font-black text-2xl uppercase tracking-widest flex items-center gap-3 border-b border-white/10 pb-4"><Star/> Misión</h4><p className="font-light text-xl">Administrar la comuna asegurando la participación de la comunidad en su progreso. Entregar servicios de alta calidad, con eficiencia, transparencia y calidez humana.</p></section><section className="space-y-4 pt-10"><h4 className="text-orange-500 font-black text-2xl uppercase tracking-widest flex items-center gap-3 border-b border-white/10 pb-4"><Landmark/> Visión</h4><p className="font-light text-xl">Ser una comuna líder en desarrollo sostenible y Smart City, reconocida por su respeto al patrimonio y por brindar calidad de vida.</p></section></>} 
     />;
 
-    case 3: return <ChapterLayout title="Concejo" subtitle="Fiscalización y Democracia" 
+    // 4. CONCEJO
+    case 4: return <ChapterLayout title="Concejo" subtitle="Fiscalización y Democracia" 
       visual={<div className="grid grid-cols-2 gap-4 p-6 w-full h-full overflow-y-auto">{CONCEJALES.map(c => <div key={c} className="bg-white/5 p-4 rounded-2xl border border-white/10 text-center text-[10px] font-black uppercase flex flex-col items-center justify-center hover:bg-red-600 transition-colors shadow-lg"><User size={24} className="mb-2 text-red-500 group-hover:text-white"/><span className="text-white">{c}</span></div>)}</div>}
       content={<><p>El **Concejo Municipal** fiscaliza la gestión y aprueba normas locales. Está compuesto por 10 concejales electos.</p><div className="bg-yellow-500/10 p-8 rounded-3xl border border-yellow-500/20 space-y-6 mt-4"><h4 className="text-yellow-500 font-black text-2xl uppercase flex items-center gap-4 italic"><Shield/> Funciones</h4><ul className="space-y-4 font-light text-lg"><li>• Fiscalizar planes y programas.</li><li>• Aprobar el presupuesto anual.</li><li>• Dictar ordenanzas comunales.</li></ul></div></>} 
     />;
 
-    case 4: return <ChapterLayout title="Estructura" subtitle="Direcciones Municipales" 
+    // 5. ESTRUCTURA
+    case 5: return <ChapterLayout title="Estructura" subtitle="Direcciones Municipales" 
       visual={<div className="flex items-center justify-center p-8"><img src="/img/organigrama_full.png" className="max-h-full object-contain drop-shadow-[0_0_50px_rgba(255,255,255,0.1)]" onError={(e) => e.currentTarget.src='https://placehold.co/600x800/111/fff?text=Organigrama'}/></div>}
       content={<><p className="text-3xl font-black text-white italic border-l-4 border-red-600 pl-4 uppercase tracking-tighter mb-8">Red de Servicio:</p><div className="grid gap-4 mt-6">{DEPARTAMENTOS.map((d, i) => (<div key={i} className="p-5 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all"><h4 className="font-black text-white uppercase text-lg">{d}</h4></div>))}</div></>} 
     />;
 
-    case 5: return <ChapterLayout title="Smart City" subtitle="Ecosistema Digital" 
+    // 6. SMART CITY
+    case 6: return <ChapterLayout title="Smart City" subtitle="Ecosistema Digital" 
       visual={<div className="w-full h-full flex flex-col items-center justify-center p-8"><div className="bg-white text-slate-950 font-black p-10 rounded-full mb-10 text-4xl shadow-2xl">IMLS</div><div className="flex gap-6 w-full justify-center"><div className="bg-blue-600/30 p-6 rounded-3xl border border-blue-500/50 flex flex-col items-center gap-2 w-1/2"><Users size={30}/><span className="font-black uppercase text-xs">VECINOS</span></div><div className="bg-green-600/30 p-6 rounded-3xl border border-green-500/50 flex flex-col items-center gap-2 w-1/2"><Landmark size={30}/><span className="font-black uppercase text-xs">ESTADO</span></div></div></div>}
-      content={<><p className="text-2xl font-bold text-white uppercase italic tracking-tighter">Tecnología al Servicio.</p><p>No somos una isla. La IMLS interactúa con un ecosistema complejo donde el **Vecino** es el eje central. Nuestra gestión se coordina con el Gobierno Regional y el sector privado.</p><div className="mt-6 p-6 bg-blue-900/20 rounded-2xl border border-blue-500/30"><p className="italic text-lg">"Nuestra meta es una ciudad conectada, segura y transparente."</p></div></>} 
+      content={<><p className="text-2xl font-bold text-white uppercase italic tracking-tighter">Tecnología al Servicio.</p><p>No somos una isla. La IMLS interactúa con un ecosistema complejo donde el **Vecino** es el eje central.</p><div className="mt-6 p-6 bg-blue-900/20 rounded-2xl border border-blue-500/30"><p className="italic text-lg">"Nuestra meta es una ciudad conectada, segura y transparente."</p></div></>} 
     />;
 
-    case 6: return <ChapterLayout title="Seguridad" subtitle="Línea 1420" 
+    // 7. SEGURIDAD 1420
+    case 7: return <ChapterLayout title="Seguridad" subtitle="Línea 1420" 
       visual={<div className="p-12 text-center animate-pulse"><Phone size={140} className="text-red-600 mx-auto"/><h4 className="text-white font-black text-[7rem] mt-6 tracking-tighter italic leading-none shadow-2xl">1420</h4></div>}
       content={
         <>
@@ -265,28 +241,32 @@ export default function App() {
       } 
     />;
 
-    case 7: return <ChapterLayout title="Bienestar" subtitle="Calidad de Vida" 
+    // 8. CALIDAD DE VIDA
+    case 8: return <ChapterLayout title="Bienestar" subtitle="Calidad de Vida" 
       visual={<div className="p-12 text-center"><HeartHandshake size={150} className="text-red-600 mx-auto drop-shadow-2xl"/><h4 className="text-white font-black text-3xl mt-8 uppercase italic">PERSONAS<br/>PRIMERO</h4></div>}
       content={<><p className="text-2xl font-bold text-white mb-6">Red de apoyo para ti:</p><div className="space-y-6"><div className="p-6 border-2 border-green-500/30 bg-green-500/10 rounded-3xl flex gap-6 items-center"><Stethoscope size={40} className="text-green-500 shrink-0"/><div className="space-y-1"><h4 className="font-black text-white text-xl uppercase">Salud & Psicología</h4><p className="text-sm text-slate-400">Convenios, seguros y apoyo psicológico.</p></div></div><div className="p-6 border-2 border-blue-500/30 bg-blue-500/10 rounded-3xl flex gap-6 items-center"><Activity size={40} className="text-blue-500 shrink-0"/><div className="space-y-1"><h4 className="font-black text-white text-xl uppercase">Deportes</h4><p className="text-sm text-slate-400">Acceso a recintos y pausas activas.</p></div></div></div></>} 
     />;
 
-    case 8: return <ChapterLayout title="Ley Karin" subtitle="Respeto (21.643)" 
+    // 9. LEY KARIN
+    case 9: return <ChapterLayout title="Ley Karin" subtitle="Respeto (21.643)" 
       visual={<div className="p-12 text-center"><Shield size={150} className="text-pink-600 mx-auto"/><h4 className="font-bold text-pink-100 mt-6 text-3xl uppercase">Ley 21.643</h4></div>}
-      content={<><p className="text-3xl font-black text-white mb-6 italic uppercase leading-none border-b border-white/10 pb-4">Tolerancia Cero.</p><p>La **Ley Karin** mandata la prevención y sanción del acoso laboral, sexual y la violencia. Protegemos tu integridad:</p><div className="grid gap-6 mt-8"><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><AlertTriangle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Acoso Laboral</h5><p className="text-xs text-slate-400">Agresión u hostigamiento contra la dignidad.</p></div></div><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><MessageCircle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Violencia</h5><p className="text-xs text-slate-400">Ejercida por terceros (usuarios/vecinos).</p></div></div></div><p className="mt-8 text-xs bg-white/5 p-4 rounded-xl text-center italic">"Un solo acto grave es suficiente para denunciar."</p></>} 
+      content={<><p className="text-3xl font-black text-white mb-6 italic uppercase leading-none border-b border-white/10 pb-4">Tolerancia Cero.</p><p>La **Ley Karin** mandata la prevención y sanción del acoso laboral, sexual y la violencia.</p><div className="grid gap-6 mt-8"><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><AlertTriangle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Acoso Laboral</h5><p className="text-xs text-slate-400">Agresión u hostigamiento contra la dignidad.</p></div></div><div className="bg-pink-600/10 p-6 rounded-3xl border border-pink-500/30 flex items-center gap-6"><MessageCircle className="text-pink-500" size={32}/><div><h5 className="text-white font-black text-lg uppercase">Violencia</h5><p className="text-xs text-slate-400">Ejercida por terceros (usuarios/vecinos).</p></div></div></div><p className="mt-8 text-xs bg-white/5 p-4 rounded-xl text-center italic">"Un solo acto grave es suficiente para denunciar."</p></>} 
     />;
 
-    case 9: return <ChapterLayout title="Protección" subtitle="Mutualidad y Emergencias" 
+    // 10. MUTUAL
+    case 10: return <ChapterLayout title="Protección" subtitle="Mutualidad y Emergencias" 
       visual={<div className="p-12"><HardHat size={150} className="text-yellow-500 mx-auto animate-bounce"/></div>}
-      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><Radio size={30}/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
+      content={<><h4 className="text-yellow-500 font-black text-3xl uppercase tracking-tighter mb-6 border-b border-yellow-500/20 pb-4">Mutual de Seguridad CChC</h4><p className="mb-6 font-bold text-xl">Si te lesionas (Ley 16.744):</p><div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-6"><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">1</div><div><h5 className="font-black text-white text-xl">Avisa a Jefatura</h5><p className="text-sm mt-1 text-slate-400">De inmediato, por leve que sea el incidente.</p></div></div><div className="flex gap-6 items-start"><div className="bg-yellow-500 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0">2</div><div><h5 className="font-black text-white text-xl">Ir a Mutual</h5><p className="text-sm mt-1 text-slate-400">Exige el registro médico oficial (DIAT).</p></div></div></div><div className="mt-10 bg-blue-600/20 p-6 rounded-3xl border border-blue-500/30"><h4 className="text-blue-400 font-black text-xl uppercase flex items-center gap-3 mb-2"><Radio size={30}/> Tsunami</h4><p className="text-sm">Ante sismo fuerte: **EVACUAR A COTA 30** (Av. Cisternas).</p></div></>} 
     />;
 
-    case 10: return <ChapterLayout title="Educación" subtitle="Capacitación Continua" 
+    // 11. EDUCACIÓN
+    case 11: return <ChapterLayout title="Educación" subtitle="Capacitación Continua" 
       visual={<div className="p-12 animate-in zoom-in duration-1000"><GraduationCap size={150} className="text-red-600 drop-shadow-[0_0_30px_red] animate-pulse"/></div>}
       content={<><p className="text-3xl font-black text-white mb-6 uppercase italic">Capacitación Continua.</p><p className="font-light">Impulsamos tu crecimiento profesional:</p><div className="grid gap-6 mt-8"><div className="p-6 bg-white/5 rounded-3xl border border-white/10 flex items-center gap-6"><BookOpen className="text-red-500" size={40}/><div><h4 className="text-white font-black text-xl uppercase">Academia</h4><p className="text-slate-400 text-xs mt-1">Cursos certificados de gestión pública.</p></div></div><div className="p-6 bg-white/5 rounded-3xl border border-white/10 flex items-center gap-6"><Zap className="text-orange-500" size={40}/><div><h4 className="text-white font-black text-xl uppercase">Innovación</h4><p className="text-slate-400 text-xs mt-1">Talleres de soluciones digitales.</p></div></div></div></>} 
     />;
 
-    // 11. QUIZ
-    case 11: return (
+    // 12. QUIZ
+    case 12: return (
       <div className="h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-4">
         <div className="bg-slate-900 w-full max-w-4xl rounded-[3rem] border border-white/10 flex flex-col h-[80vh] shadow-2xl relative overflow-hidden">
            <div className="absolute top-0 left-0 w-full h-2 bg-white/5"><div className="h-full bg-red-600 transition-all" style={{width: `${((quizIndex+1)/10)*100}%`}}></div></div>
@@ -313,14 +293,15 @@ export default function App() {
              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in zoom-in">
                <Award size={100} className="text-yellow-500 mb-8 animate-bounce" />
                <h2 className="text-5xl font-black text-white mb-6 uppercase italic">¡APROBADO!</h2>
-               <button onClick={() => setStep(12)} className="bg-red-600 text-white py-4 px-10 rounded-2xl font-black uppercase tracking-widest text-lg shadow-xl hover:scale-105 transition-transform">Ver Diploma</button>
+               <button onClick={() => setStep(13)} className="bg-red-600 text-white py-4 px-10 rounded-2xl font-black uppercase tracking-widest text-lg shadow-xl hover:scale-105 transition-transform">Ver Diploma</button>
              </div>
            )}
         </div>
       </div>
     );
 
-    case 12: return (
+    // 13. DIPLOMA FINAL
+    case 13: return (
       <div className="h-[100dvh] bg-slate-950 flex flex-col overflow-y-auto font-sans p-6">
          <div className="w-full max-w-5xl mx-auto space-y-10 py-10">
             {/* DIPLOMA */}
