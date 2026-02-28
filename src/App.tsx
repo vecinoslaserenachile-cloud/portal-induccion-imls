@@ -1,24 +1,9 @@
-Entendido, Rodrigo. Si se va a negro después de la 4, es un **error de código (Crash)** en la diapositiva 5 (El Mapa de Públicos). Probablemente una animación o un ícono que tu sistema no reconoce y hace explotar la aplicación.
-
-Y lo del video "Loop" es porque el botón Siguiente no se estaba activando bien.
-
-**ESTA ES LA SOLUCIÓN DEFINITIVA "MODO SEGURO":**
-
-1. **Eliminé TODAS las animaciones complejas** (giros, desenfoques) que causan la pantalla negra. Ahora es diseño limpio y estático.
-2. **Cambié los Íconos:** Usé solo íconos básicos (`User`, `Star`, `Home`) que funcionan en cualquier versión para evitar el crash de la diapositiva 5.
-3. **Botón Siguiente LIBERADO:** Ya no depende del scroll ni de nada. Siempre podrás avanzar.
-4. **Video:** Puesto de forma simple.
-
-Por favor, copia y pega esto en `src/App.tsx`. **Te garantizo que pasará de la diapositiva 5.**
-
-```tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle, ChevronRight, ChevronLeft, Award, 
-  ChevronDown, Shield, Heart, DollarSign, 
-  Printer, RefreshCw, User, Map, Briefcase, 
-  Home, Star, Clock, Smartphone, 
-  ArrowRight, AlertCircle, PlayCircle
+  Shield, Heart, DollarSign, Printer, RefreshCw, 
+  User, Map, Briefcase, Building2, Lightbulb, 
+  Clock, Smartphone, ArrowRight, AlertCircle, Quote, PlayCircle, Star
 } from 'lucide-react';
 
 // --- DATOS ---
@@ -36,11 +21,11 @@ const DEPARTAMENTOS = [
 ];
 
 const QUESTIONS = [
-  { q: "¿Quiénes son parte del equipo municipal?", options: ["Solo planta", "Planta, Contrata y Honorarios", "Solo directivos"], ans: 1, explanation: "Correcto. Todos somos funcionarios con vocación de servicio." },
-  { q: "¿Cuál es el foco de nuestra gestión?", options: ["La Burocracia", "El Vecino y su bienestar", "Cumplir horario"], ans: 1, explanation: "Exacto. El vecino es el centro de cada decisión." },
-  { q: "¿Cuántos concejales componen el Concejo?", options: ["6", "8", "10"], ans: 2, explanation: "Son 10 concejales electos democráticamente." },
-  { q: "¿Qué hacer ante un accidente laboral?", options: ["Irse a casa", "Avisar INMEDIATAMENTE a jefatura", "Esperar"], ans: 1, explanation: "Vital: Avisar de inmediato para activar el seguro ACHS." },
-  { q: "¿Qué sanciona la Ley Karin?", options: ["Acoso y Violencia", "Llegar tarde", "Uniforme"], ans: 0, explanation: "Tolerancia cero al acoso laboral, sexual y violencia." },
+  { q: "¿Quiénes son parte del equipo?", options: ["Solo planta", "Planta, Contrata y Honorarios", "Solo directivos"], ans: 1, explanation: "Todos somos funcionarios públicos." },
+  { q: "¿Cuál es el foco de gestión?", options: ["Burocracia", "El Vecino", "Cumplir horario"], ans: 1, explanation: "El vecino es el centro." },
+  { q: "¿Cuántos concejales hay?", options: ["6", "8", "10"], ans: 2, explanation: "10 concejales electos." },
+  { q: "¿Qué hacer ante un accidente?", options: ["Irse a casa", "Avisar a jefatura", "Nada"], ans: 1, explanation: "Avisar para activar seguro ACHS." },
+  { q: "¿Qué sanciona la Ley Karin?", options: ["Acoso y Violencia", "Llegar tarde", "Uniforme"], ans: 0, explanation: "Tolerancia cero al acoso." },
 ];
 
 const CONCEJALES = [
@@ -49,43 +34,41 @@ const CONCEJALES = [
   "Camilo Araya Plaza", "María Marcela Damke", "Matías Espinosa Morales", "Luisa Jinete Cárcamo"
 ];
 
-// --- APP PRINCIPAL ---
 export default function App() {
+  // ESTADO
   const [step, setStep] = useState(0); 
   const [userData, setUserData] = useState({ nombres: '', apellidos: '', rut: '', dept: '', cargo: '' });
   const [currentTime, setCurrentTime] = useState(new Date());
   
-  // Quiz Logic
+  // QUIZ STATE
   const [quizIndex, setQuizIndex] = useState(0);
   const [quizState, setQuizState] = useState<'waiting' | 'correct' | 'wrong'>('waiting');
   const [score, setScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const totalSteps = 12;
+  const TOTAL_STEPS = 11; // 0 a 11
 
-  // Reloj simple
+  // Reloj
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Reset scroll
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
-  }, [step]);
+  // --- NAVEGACIÓN MANUAL (SEGURA) ---
+  const goNext = () => {
+    if (step < TOTAL_STEPS) setStep(s => s + 1);
+  };
 
-  // Navegación Segura
-  const goNext = () => setStep(prev => prev + 1);
-  const goBack = () => setStep(prev => Math.max(0, prev - 1));
+  const goBack = () => {
+    if (step > 0) setStep(s => s - 1);
+  };
 
-  // Quiz Handlers
+  // --- LÓGICA QUIZ ---
   const handleAnswer = (optionIndex: number) => {
     if (quizState !== 'waiting') return;
-    const isCorrect = optionIndex === QUESTIONS[quizIndex].ans;
-    if (isCorrect) {
+    if (optionIndex === QUESTIONS[quizIndex].ans) {
       setQuizState('correct');
-      setScore(prev => prev + 1);
+      setScore(s => s + 1);
     } else {
       setQuizState('wrong');
     }
@@ -94,7 +77,7 @@ export default function App() {
   const nextQuestion = () => {
     setQuizState('waiting');
     if (quizIndex < QUESTIONS.length - 1) {
-      setQuizIndex(prev => prev + 1);
+      setQuizIndex(i => i + 1);
     } else {
       setQuizFinished(true);
     }
@@ -104,308 +87,275 @@ export default function App() {
 
   // --- LAYOUT ---
   const ChapterLayout = ({ title, subtitle, content, visual }: any) => (
-    <div className="h-screen w-full flex flex-col lg:flex-row bg-slate-50 text-slate-900 overflow-hidden font-sans">
-      
-      {/* Barra Progreso */}
-      <div className="fixed top-0 w-full h-2 bg-slate-200 z-50">
-        <div className="h-full bg-red-600 transition-all duration-300" style={{ width: `${(step / totalSteps) * 100}%` }}></div>
-      </div>
-      
-      {/* VISUAL */}
-      <div className="lg:order-2 lg:w-1/2 w-full lg:h-full h-[40vh] bg-slate-100 flex items-center justify-center relative p-0 lg:p-8 border-b lg:border-b-0 lg:border-l border-slate-200">
-        <div className="w-full h-full lg:rounded-3xl overflow-hidden shadow-none lg:shadow-xl bg-white relative">
-           {visual}
-        </div>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+      {/* Barra Superior */}
+      <div className="fixed top-0 left-0 w-full h-2 bg-slate-200 z-50">
+        <div className="h-full bg-red-600 transition-all duration-300" style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}></div>
       </div>
 
-      {/* CONTENIDO */}
-      <div className="lg:order-1 lg:w-1/2 w-full flex flex-col h-[60vh] lg:h-full bg-white relative z-10">
+      {/* Contenedor Principal (Scrollable) */}
+      <div className="flex-1 flex flex-col lg:flex-row pt-2">
         
-        <div className="px-8 lg:px-16 pt-6 pb-2 shrink-0 bg-white border-b border-slate-100">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">Módulo {step}</span>
-            <span className="text-slate-400 text-[10px] font-bold uppercase">Inducción 2026</span>
-          </div>
-          <h2 className="text-2xl lg:text-5xl font-black text-slate-900 leading-tight mb-1">{title}</h2>
-          <h3 className="text-base lg:text-xl text-slate-500 font-serif italic">{subtitle}</h3>
-        </div>
-        
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-8 lg:px-16 py-6">
-          <div className="space-y-6 text-lg text-slate-700 leading-relaxed font-normal">
-            {content}
-            <div className="h-24"></div>
-          </div>
+        {/* VISUAL (Arriba en móvil, Izquierda en PC) */}
+        <div className="lg:w-1/2 bg-slate-100 flex items-center justify-center p-4 lg:p-12 border-b lg:border-b-0 lg:border-r border-slate-200 lg:h-screen lg:fixed lg:top-0 lg:left-0">
+           <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl overflow-hidden aspect-video lg:aspect-auto lg:h-[600px] relative flex items-center justify-center">
+             {visual}
+           </div>
         </div>
 
-        <div className="px-8 lg:px-16 py-4 border-t border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-20">
-           <button onClick={goBack} className="text-slate-500 hover:text-slate-900 font-bold text-xs uppercase flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-slate-100">
-             <ChevronLeft size={16}/> Atrás
-           </button>
+        {/* CONTENIDO (Abajo en móvil, Derecha en PC - Con margen para no tapar lo fijo) */}
+        <div className="lg:w-1/2 lg:ml-[50%] flex flex-col min-h-screen bg-white">
+           <div className="p-8 lg:p-16 flex-1">
+              <div className="mb-6">
+                <span className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Paso {step}</span>
+                <h2 className="text-3xl lg:text-5xl font-black text-slate-900 mt-4 mb-2 leading-tight">{title}</h2>
+                <h3 className="text-xl text-slate-500 font-serif italic">{subtitle}</h3>
+              </div>
+              
+              <div className="space-y-6 text-lg text-slate-700 leading-relaxed">
+                {content}
+              </div>
+              
+              <div className="h-24"></div> {/* Espacio para el footer fijo */}
+           </div>
 
-           <button onClick={goNext} className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-red-600 transition-all flex items-center gap-2 text-sm uppercase tracking-wide">
-             Siguiente <ArrowRight size={18} />
-           </button>
+           {/* BOTONERA FIJA ABAJO */}
+           <div className="fixed bottom-0 right-0 w-full lg:w-1/2 bg-white/90 backdrop-blur-md border-t border-slate-200 p-4 lg:p-8 flex justify-between items-center z-40">
+              <button onClick={goBack} className="text-slate-500 font-bold text-sm flex items-center gap-2 hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors">
+                <ChevronLeft size={20}/> Atrás
+              </button>
+              
+              <button onClick={goNext} className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold shadow-xl hover:bg-red-600 transition-all flex items-center gap-2 transform hover:-translate-y-1">
+                Siguiente <ArrowRight size={20}/>
+              </button>
+           </div>
         </div>
       </div>
     </div>
   );
 
-  // --- PANTALLAS ---
+  // --- VISTAS ---
 
   // 0. LOGIN
   if (step === 0) return (
-    <div className="h-screen w-full flex items-center justify-center bg-slate-900 relative overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <img src="/img/portada.jpg" onError={(e) => e.currentTarget.src='https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070'} className="w-full h-full object-cover opacity-20" alt="Fondo" />
-        <div className="absolute inset-0 bg-slate-900/50"></div>
-      </div>
-      
-      <div className="relative z-10 w-full max-w-lg bg-white p-8 rounded-3xl shadow-2xl m-4">
-        <div className="text-center mb-6">
-          <img src="/img/escudo.png" onError={(e) => e.currentTarget.style.display='none'} className="h-20 mx-auto mb-2" alt="Escudo" />
-          <h1 className="text-3xl font-black text-slate-900 uppercase">Inducción Municipal</h1>
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="absolute inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070')] bg-cover opacity-20"></div>
+      <div className="relative z-10 w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl">
+        <div className="text-center mb-8">
+           <h1 className="text-4xl font-black text-slate-900 mb-1">INDUCCIÓN</h1>
+           <p className="text-red-600 font-bold tracking-[0.3em] text-sm">MUNICIPALIDAD LA SERENA</p>
         </div>
-        
         <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-               <input className="w-full p-3 bg-slate-100 rounded-lg font-bold text-slate-900" placeholder="Nombres" onChange={e => setUserData({...userData, nombres: e.target.value})} />
-               <input className="w-full p-3 bg-slate-100 rounded-lg font-bold text-slate-900" placeholder="Apellidos" onChange={e => setUserData({...userData, apellidos: e.target.value})} />
-            </div>
-            <input className="w-full p-3 bg-slate-100 rounded-lg font-bold text-slate-900" placeholder="RUT" onChange={e => setUserData({...userData, rut: e.target.value})} />
-            <select className="w-full p-3 bg-slate-100 rounded-lg font-bold text-slate-900" onChange={e => setUserData({...userData, dept: e.target.value})}>
-                <option value="">Selecciona Unidad...</option>
-                {DEPARTAMENTOS.map((d, i) => <option key={i} value={d}>{d}</option>)}
-            </select>
-            <input className="w-full p-3 bg-slate-100 rounded-lg font-bold text-slate-900" placeholder="Cargo" onChange={e => setUserData({...userData, cargo: e.target.value})} />
-            
-            <button disabled={!userData.nombres || !userData.rut || !userData.dept} onClick={goNext} className="w-full bg-red-600 text-white p-4 rounded-xl font-bold hover:bg-red-700 transition-all flex justify-center gap-2 items-center disabled:opacity-50">
-              INGRESAR <ArrowRight size={20}/>
-            </button>
+           <input className="w-full p-4 bg-slate-100 rounded-xl font-bold" placeholder="Nombres" onChange={e => setUserData({...userData, nombres: e.target.value})} />
+           <input className="w-full p-4 bg-slate-100 rounded-xl font-bold" placeholder="Apellidos" onChange={e => setUserData({...userData, apellidos: e.target.value})} />
+           <input className="w-full p-4 bg-slate-100 rounded-xl font-bold" placeholder="RUT" onChange={e => setUserData({...userData, rut: e.target.value})} />
+           <select className="w-full p-4 bg-slate-100 rounded-xl font-bold" onChange={e => setUserData({...userData, dept: e.target.value})}>
+             <option value="">Departamento...</option>
+             {DEPARTAMENTOS.map((d,i) => <option key={i} value={d}>{d}</option>)}
+           </select>
+           <input className="w-full p-4 bg-slate-100 rounded-xl font-bold" placeholder="Cargo" onChange={e => setUserData({...userData, cargo: e.target.value})} />
+           
+           <button disabled={!userData.nombres} onClick={goNext} className="w-full bg-red-600 text-white p-4 rounded-xl font-black text-lg hover:bg-red-700 transition-colors flex justify-center items-center gap-2">
+             INGRESAR <ArrowRight/>
+           </button>
         </div>
       </div>
     </div>
   );
 
   switch (step) {
-    case 1: return <ChapterLayout title="Bienvenida" subtitle="Mensaje de la Alcaldesa" 
+    case 1: return <ChapterLayout title="Bienvenida" subtitle="Alcaldesa Daniela Norambuena" 
       visual={
-        <div className="w-full h-full bg-black flex items-center justify-center">
-           <iframe className="w-full h-full aspect-video" src="https://www.youtube.com/embed/EQUdyb-YVxM?rel=0" title="Mensaje" frameBorder="0" allowFullScreen></iframe>
-        </div>
+        <iframe className="w-full h-full" src="https://www.youtube.com/embed/EQUdyb-YVxM" title="Video" frameBorder="0" allowFullScreen></iframe>
       }
       content={
         <div>
-           <p className="font-black text-3xl text-slate-900 mb-6">¡Hola, {userData.nombres}!</p>
-           <p className="mb-6 text-xl text-slate-600">Te sumas a una institución con historia. La Serena es una capital patrimonial que exige lo mejor de nosotros.</p>
-           <div className="bg-red-50 p-6 rounded-2xl border-l-8 border-red-600 mb-8">
-             <p className="text-xl font-serif italic text-red-900">"Queremos funcionarios proactivos, empáticos y que entiendan que detrás de cada papel hay una familia."</p>
-             <p className="text-right font-bold text-red-700 mt-2 text-sm">- Daniela Norambuena, Alcaldesa</p>
+           <p className="text-2xl font-bold text-slate-900 mb-4">¡Hola, {userData.nombres}!</p>
+           <p className="mb-6">Bienvenido a la Ilustre Municipalidad de La Serena. Te sumas a un equipo comprometido con el desarrollo de la segunda ciudad más antigua de Chile.</p>
+           <div className="bg-red-50 p-6 rounded-2xl border-l-4 border-red-600 italic text-red-900">
+             "Nuestro compromiso es modernizar la gestión municipal. Queremos funcionarios proactivos y empáticos."
            </div>
         </div>
       } 
     />;
 
-    case 2: return <ChapterLayout title="Carta de Navegación" subtitle="Misión y Visión" 
+    case 2: return <ChapterLayout title="Carta de Navegación" subtitle="Misión y Valores" 
       visual={
-        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white p-8">
-           <div className="space-y-6 w-full max-w-sm">
-              <div className="bg-white/10 p-6 rounded-2xl border border-white/10">
-                 <h4 className="font-black text-2xl text-yellow-400 mb-2">MISIÓN</h4>
-                 <p className="text-slate-200">Mejorar la calidad de vida de los habitantes de la comuna con gestión participativa.</p>
-              </div>
-              <div className="bg-white/10 p-6 rounded-2xl border border-white/10">
-                 <h4 className="font-black text-2xl text-red-400 mb-2">VISIÓN</h4>
-                 <p className="text-slate-200">Ser una comuna líder en desarrollo sostenible, turismo y patrimonio.</p>
-              </div>
-           </div>
+        <div className="w-full h-full bg-slate-800 flex flex-col justify-center items-center text-white p-8 text-center">
+           <Lightbulb size={60} className="text-yellow-400 mb-4"/>
+           <h4 className="font-black text-3xl mb-2">MISIÓN</h4>
+           <p>Mejorar la calidad de vida con gestión participativa.</p>
         </div>
       }
       content={
         <>
-          <p className="text-2xl font-light text-slate-500 mb-8">Nuestros Valores:</p>
+          <p className="text-xl mb-6 font-light">Nuestros valores intransables:</p>
           <div className="space-y-4">
-             <div className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-               <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold shrink-0">1</div>
-               <div><h4 className="font-bold text-slate-900">Probidad</h4><p className="text-slate-600">Actuamos con rectitud intachable.</p></div>
+             <div className="p-4 border rounded-xl flex gap-4 items-center">
+               <div className="bg-red-100 p-2 rounded-lg text-red-600 font-bold">1</div>
+               <div><h4 className="font-bold">Probidad</h4><p className="text-sm">Rectitud intachable.</p></div>
              </div>
-             <div className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shrink-0">2</div>
-               <div><h4 className="font-bold text-slate-900">Cercanía</h4><p className="text-slate-600">Somos servidores públicos empáticos.</p></div>
+             <div className="p-4 border rounded-xl flex gap-4 items-center">
+               <div className="bg-blue-100 p-2 rounded-lg text-blue-600 font-bold">2</div>
+               <div><h4 className="font-bold">Cercanía</h4><p className="text-sm">Empatía con el vecino.</p></div>
              </div>
-             <div className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-               <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold shrink-0">3</div>
-               <div><h4 className="font-bold text-slate-900">Transparencia</h4><p className="text-slate-600">Nuestros actos son públicos.</p></div>
+             <div className="p-4 border rounded-xl flex gap-4 items-center">
+               <div className="bg-green-100 p-2 rounded-lg text-green-600 font-bold">3</div>
+               <div><h4 className="font-bold">Transparencia</h4><p className="text-sm">Actos públicos.</p></div>
              </div>
           </div>
         </>
       } 
     />;
-    
+
     case 3: return <ChapterLayout title="Concejo Municipal" subtitle="Fiscalización" 
       visual={
-        <div className="h-full w-full bg-slate-100 p-6 overflow-y-auto">
-            <div className="grid grid-cols-2 gap-3">
-            {CONCEJALES.map((name, i) => (
-               <div key={i} className="bg-white p-3 rounded-xl shadow-sm text-center border border-slate-200">
-                 <div className="w-12 h-12 bg-slate-200 rounded-full mx-auto mb-2 overflow-hidden">
-                   <User className="w-full h-full p-2 text-slate-400" />
-                 </div>
-                 <p className="text-[10px] font-bold text-slate-900 uppercase">{name}</p>
+        <div className="w-full h-full bg-slate-100 p-4 overflow-y-auto">
+           <div className="grid grid-cols-2 gap-2">
+             {CONCEJALES.map((c, i) => (
+               <div key={i} className="bg-white p-2 rounded-lg text-center text-[10px] font-bold shadow-sm border">
+                 <User className="mx-auto mb-1 text-slate-300"/> {c}
                </div>
-            ))}
-            </div>
+             ))}
+           </div>
         </div>
       }
       content={
         <>
-          <p className="mb-6 text-lg">El <strong>Concejo Municipal</strong> está compuesto por <strong>10 concejales</strong> electos.</p>
-          <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-2xl">
-             <h4 className="font-black text-yellow-900 text-lg mb-4">Sus Funciones:</h4>
-             <ul className="space-y-3">
-               <li className="flex gap-2"><CheckCircle size={20} className="text-yellow-700"/> <strong>Normar:</strong> Aprueban ordenanzas.</li>
-               <li className="flex gap-2"><CheckCircle size={20} className="text-yellow-700"/> <strong>Fiscalizar:</strong> Revisan el presupuesto.</li>
-               <li className="flex gap-2"><CheckCircle size={20} className="text-yellow-700"/> <strong>Resolver:</strong> Aprueban licitaciones.</li>
-             </ul>
-          </div>
+          <p>El Concejo Municipal tiene 10 integrantes electos.</p>
+          <ul className="space-y-3 mt-4">
+            <li className="flex gap-2"><CheckCircle className="text-green-500"/> <strong>Normar:</strong> Ordenanzas.</li>
+            <li className="flex gap-2"><CheckCircle className="text-green-500"/> <strong>Fiscalizar:</strong> Presupuesto.</li>
+            <li className="flex gap-2"><CheckCircle className="text-green-500"/> <strong>Resolver:</strong> Licitaciones.</li>
+          </ul>
         </>
       } 
     />;
 
     case 4: return <ChapterLayout title="Organigrama" subtitle="Estructura" 
-      visual={<div className="flex items-center justify-center h-full bg-slate-100 p-4"><img src="/img/organigrama_full.png" onError={(e) => e.currentTarget.src='https://placehold.co/800x1000/png?text=Organigrama'} className="max-h-full max-w-full object-contain" /></div>}
+      visual={<img src="/img/organigrama_full.png" className="w-full h-full object-contain" onError={(e) => e.currentTarget.src='https://placehold.co/600x800?text=Organigrama'}/>}
       content={
         <>
-          <p className="mb-6 text-lg">Entender el organigrama es vital para saber a quién acudir.</p>
-          <div className="grid gap-4">
-             <div className="p-4 bg-white border border-slate-200 shadow-sm rounded-2xl">
-                <h4 className="font-bold text-slate-900">DIDECO (Social)</h4><p className="text-slate-500">Gestiona ayudas sociales y organizaciones.</p>
+          <p className="mb-4">Direcciones clave:</p>
+          <div className="space-y-4">
+             <div className="p-4 bg-white shadow-sm rounded-xl border">
+               <h4 className="font-bold text-red-600">DIDECO</h4>
+               <p className="text-sm">Ayudas sociales y organizaciones.</p>
              </div>
-             <div className="p-4 bg-white border border-slate-200 shadow-sm rounded-2xl">
-                <h4 className="font-bold text-slate-900">DOM (Obras)</h4><p className="text-slate-500">Permisos de edificación y urbanismo.</p>
+             <div className="p-4 bg-white shadow-sm rounded-xl border">
+               <h4 className="font-bold text-blue-600">DOM</h4>
+               <p className="text-sm">Obras y permisos de edificación.</p>
              </div>
-             <div className="p-4 bg-white border border-slate-200 shadow-sm rounded-2xl">
-                <h4 className="font-bold text-slate-900">SECPLAN (Planificación)</h4><p className="text-slate-500">Diseña los proyectos de inversión.</p>
+             <div className="p-4 bg-white shadow-sm rounded-xl border">
+               <h4 className="font-bold text-green-600">SECPLAN</h4>
+               <p className="text-sm">Proyectos de inversión.</p>
              </div>
           </div>
         </>
       } 
     />;
 
-    case 5: return <ChapterLayout title="Ecosistema" subtitle="Mapa de Públicos" 
+    case 5: return <ChapterLayout title="Mapa de Públicos" subtitle="Ecosistema" 
       visual={
-        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 p-8 space-y-4">
-           {/* VERSIÓN SIMPLIFICADA QUE NO CRASHEA */}
-           <div className="bg-white p-4 rounded-full w-24 h-24 flex items-center justify-center font-black text-xl shadow-[0_0_20px_white]">IMLS</div>
-           
-           <div className="grid grid-cols-2 gap-4 w-full">
-             <div className="bg-blue-900/50 p-4 rounded-xl text-center text-blue-100 border border-blue-500/30">
-               <User className="mx-auto mb-1"/> Vecinos
-             </div>
-             <div className="bg-green-900/50 p-4 rounded-xl text-center text-green-100 border border-green-500/30">
-               <Briefcase className="mx-auto mb-1"/> Empresas
-             </div>
-             <div className="bg-purple-900/50 p-4 rounded-xl text-center text-purple-100 border border-purple-500/30">
-               <Shield className="mx-auto mb-1"/> Gobierno
-             </div>
-             <div className="bg-orange-900/50 p-4 rounded-xl text-center text-orange-100 border border-orange-500/30">
-               <Map className="mx-auto mb-1"/> Turistas
-             </div>
+        <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-white">
+           <div className="bg-white text-slate-900 font-black p-4 rounded-full mb-8">IMLS</div>
+           <div className="grid grid-cols-2 gap-4 text-center text-sm">
+             <div className="bg-blue-600 p-2 rounded-lg">Vecinos</div>
+             <div className="bg-green-600 p-2 rounded-lg">Empresas</div>
+             <div className="bg-purple-600 p-2 rounded-lg">Gobierno</div>
+             <div className="bg-orange-600 p-2 rounded-lg">Turistas</div>
            </div>
         </div>
       }
       content={
         <>
-          <p className="text-lg mb-6">No somos una isla. El municipio interactúa con:</p>
+          <p className="mb-4">Interactuamos con:</p>
+          <ul className="space-y-4">
+            <li className="flex gap-3 items-center"><User className="text-blue-500"/> <strong>Vecinos:</strong> El centro de la gestión.</li>
+            <li className="flex gap-3 items-center"><Briefcase className="text-green-500"/> <strong>Privados:</strong> Socios estratégicos.</li>
+            <li className="flex gap-3 items-center"><Building2 className="text-purple-500"/> <strong>Instituciones:</strong> Gobierno y policías.</li>
+          </ul>
+        </>
+      } 
+    />;
+
+    case 6: return <ChapterLayout title="Remuneraciones" subtitle="Un Solo Equipo" 
+      visual={<div className="w-full h-full flex items-center justify-center bg-green-50"><DollarSign size={100} className="text-green-600"/></div>}
+      content={
+        <>
+          <p className="mb-4">Todos somos compañeros, con distintas modalidades:</p>
           <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-xl border-l-4 border-blue-500">
-              <h4 className="font-bold text-blue-900">1. El Vecino</h4>
-              <p className="text-blue-700 text-sm">Es el centro de nuestra gestión.</p>
-            </div>
-            <div className="p-4 bg-green-50 rounded-xl border-l-4 border-green-500">
-              <h4 className="font-bold text-green-900">2. Privados</h4>
-              <p className="text-green-700 text-sm">Socios estratégicos para obras y servicios.</p>
-            </div>
-            <div className="p-4 bg-purple-50 rounded-xl border-l-4 border-purple-500">
-              <h4 className="font-bold text-purple-900">3. Instituciones</h4>
-              <p className="text-purple-700 text-sm">Carabineros, Bomberos, Gobierno.</p>
-            </div>
-          </div>
-        </>
-      } 
-    />;
-
-    case 6: return <ChapterLayout title="Remuneraciones" subtitle="Somos un Equipo" visual={<div className="flex items-center justify-center h-full bg-green-50 rounded-2xl"><DollarSign size={150} className="text-green-600/50" /></div>} 
-      content={
-        <>
-          <p className="mb-6 text-lg">En el municipio conviven distintas modalidades, pero <strong>todos somos compañeros</strong>.</p>
-          <div className="grid gap-4">
-             <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
-               <strong className="text-slate-900 block mb-1">Planta y Contrata</strong>
-               <p className="text-slate-600 text-sm">Pago: <strong>Penúltimo día hábil del mes</strong>.</p>
+             <div className="p-4 border rounded-xl">
+               <strong className="block text-lg">Planta y Contrata</strong>
+               <span className="text-sm text-slate-500">Pago: Penúltimo día hábil.</span>
              </div>
-             <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
-               <strong className="text-slate-900 block mb-1">Honorarios</strong>
-               <p className="text-slate-600 text-sm">Pago: Variable, requiere Informe de Actividades.</p>
+             <div className="p-4 border rounded-xl">
+               <strong className="block text-lg">Honorarios</strong>
+               <span className="text-sm text-slate-500">Pago: Variable (con informe).</span>
              </div>
           </div>
         </>
       } 
     />;
 
-    case 7: return <ChapterLayout title="Ley Karin" subtitle="Dignidad" visual={<div className="flex items-center justify-center h-full bg-pink-50 rounded-2xl"><Heart size={150} className="text-pink-400/50" /></div>} 
+    case 7: return <ChapterLayout title="Ley Karin" subtitle="Dignidad" 
+      visual={<div className="w-full h-full flex items-center justify-center bg-pink-50"><Heart size={100} className="text-pink-500"/></div>}
       content={
         <>
-          <p className="mb-6 text-lg">La <strong>Ley N° 21.643</strong> establece <strong>Tolerancia Cero</strong> con:</p>
-          <div className="grid grid-cols-1 gap-3 mb-6">
-            <div className="bg-pink-50 p-4 rounded-xl font-bold text-pink-900 flex gap-2"><Shield size={20}/> Acoso Laboral</div>
-            <div className="bg-pink-50 p-4 rounded-xl font-bold text-pink-900 flex gap-2"><Shield size={20}/> Acoso Sexual</div>
-            <div className="bg-pink-50 p-4 rounded-xl font-bold text-pink-900 flex gap-2"><Shield size={20}/> Violencia</div>
+          <p className="mb-4"><strong>Tolerancia Cero</strong> con:</p>
+          <div className="grid grid-cols-1 gap-2">
+             <div className="bg-pink-100 p-3 rounded text-pink-800 font-bold">🚫 Acoso Laboral</div>
+             <div className="bg-pink-100 p-3 rounded text-pink-800 font-bold">✋ Acoso Sexual</div>
+             <div className="bg-pink-100 p-3 rounded text-pink-800 font-bold">🗣️ Violencia</div>
           </div>
-          <p className="text-slate-600">Un solo acto grave es suficiente para denunciar.</p>
+          <p className="mt-4 text-sm">Denuncia segura y confidencial.</p>
         </>
       } 
     />;
 
-    case 8: return <ChapterLayout title="Seguridad" subtitle="Autocuidado" visual={<div className="flex items-center justify-center h-full bg-yellow-50 rounded-2xl"><Shield size={200} className="text-yellow-500/50" /></div>} 
+    case 8: return <ChapterLayout title="Seguridad" subtitle="Autocuidado" 
+      visual={<div className="w-full h-full flex items-center justify-center bg-yellow-50"><Shield size={100} className="text-yellow-500"/></div>}
       content={
         <>
-          <p className="mb-6 text-lg">Reglas de oro que salvan vidas:</p>
           <div className="space-y-6">
              <div>
-               <h4 className="font-black text-slate-900 text-lg mb-1">Zona de Tsunamis</h4>
-               <p className="text-slate-600">Evacúa hacia la <strong>Cota 30</strong> (Desde Av. Cisternas hacia arriba).</p>
+               <h4 className="font-bold text-lg">Zona de Tsunamis</h4>
+               <p>Evacuar a la <strong>Cota 30</strong> (Av. Cisternas).</p>
              </div>
              <div>
-               <h4 className="font-black text-slate-900 text-lg mb-1">Accidentes</h4>
-               <div className="bg-red-50 p-4 rounded-xl text-sm font-bold text-red-800">
-                  1. AVISAR A JEFATURA.<br/>
-                  2. ACUDIR A LA ACHS.<br/>
-                  3. REGISTRO OBLIGATORIO.
+               <h4 className="font-bold text-lg">Accidentes</h4>
+               <div className="bg-red-50 p-4 rounded-xl text-red-800 font-bold text-sm">
+                 1. AVISAR A JEFATURA.<br/>
+                 2. IR A LA ACHS.<br/>
+                 3. REGISTRO OBLIGATORIO.
                </div>
              </div>
           </div>
         </>
       } 
     />;
-    
+
     // 9. QUIZ
     case 9: return (
-      <div className="h-screen bg-slate-900 flex flex-col items-center justify-center text-white p-4 print:hidden relative overflow-hidden">
-        <div className="max-w-2xl w-full relative z-10 pb-10 overflow-y-auto max-h-screen">
-          {!quizFinished ? (
-            <div className="bg-white text-slate-900 p-8 rounded-3xl shadow-2xl">
-               <h3 className="text-2xl font-black mb-6">{QUESTIONS[quizIndex].q}</h3>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-xl">
+           {!quizFinished ? (
+             <>
+               <div className="flex justify-between mb-6 text-sm font-bold text-slate-400">
+                 <span>PREGUNTA</span>
+                 <span>{quizIndex + 1} / {QUESTIONS.length}</span>
+               </div>
+               <h3 className="text-xl font-black mb-6">{QUESTIONS[quizIndex].q}</h3>
                <div className="space-y-3">
-                 {QUESTIONS[quizIndex].options.map((opt, idx) => (
+                 {QUESTIONS[quizIndex].options.map((opt, i) => (
                    <button 
-                     key={idx} 
-                     onClick={() => handleAnswer(idx)}
+                     key={i} 
+                     onClick={() => handleAnswer(i)}
                      disabled={quizState !== 'waiting'}
-                     className={`w-full text-left p-4 rounded-xl border-2 font-bold transition-all
-                       ${quizState === 'waiting' ? 'border-slate-200 hover:bg-slate-50' : ''}
-                       ${quizState !== 'waiting' && idx === QUESTIONS[quizIndex].ans ? 'border-green-500 bg-green-50 text-green-700' : ''}
-                       ${quizState === 'wrong' && idx === parseInt(String(QUESTIONS[quizIndex].options.indexOf(opt))) ? 'border-red-500 bg-red-50 text-red-700' : ''} 
-                     `}
+                     className={`w-full text-left p-4 rounded-xl border-2 font-bold transition-all ${
+                       quizState === 'waiting' ? 'border-slate-200 hover:bg-slate-50' :
+                       i === QUESTIONS[quizIndex].ans ? 'bg-green-100 border-green-500 text-green-800' : 'opacity-50'
+                     }`}
                    >
                      {opt}
                    </button>
@@ -413,18 +363,19 @@ export default function App() {
                </div>
                {quizState !== 'waiting' && (
                  <div className="mt-6">
-                    <p className="mb-4 text-sm font-bold">{QUESTIONS[quizIndex].explanation}</p>
-                    <button onClick={nextQuestion} className="w-full py-3 rounded-xl font-bold bg-slate-900 text-white">Siguiente</button>
+                   <p className="mb-4 text-sm font-medium">{QUESTIONS[quizIndex].explanation}</p>
+                   <button onClick={nextQuestion} className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold">Siguiente</button>
                  </div>
                )}
-            </div>
-          ) : (
-            <div className="bg-white text-slate-900 p-10 rounded-3xl text-center shadow-2xl">
-              <Award size={60} className="text-yellow-500 mx-auto mb-4" />
-              <h2 className="text-4xl font-black mb-4">¡Aprobado!</h2>
-              <button onClick={() => setStep(10)} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl">Generar Certificado</button>
-            </div>
-          )}
+             </>
+           ) : (
+             <div className="text-center py-8">
+               <Award size={60} className="mx-auto text-yellow-500 mb-4"/>
+               <h2 className="text-3xl font-black mb-2">¡Completado!</h2>
+               <p className="text-slate-500 mb-6">Puntuación: {score}/{QUESTIONS.length}</p>
+               <button onClick={goNext} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold shadow-xl">Obtener Certificado</button>
+             </div>
+           )}
         </div>
       </div>
     );
@@ -432,49 +383,50 @@ export default function App() {
     // 10. CERTIFICADO
     case 10: return (
       <div className="min-h-screen bg-slate-800 flex items-center justify-center p-4">
-        <div className="bg-white p-8 max-w-4xl w-full relative shadow-2xl text-center border-[10px] border-double border-slate-200 print:w-full print:h-screen print:border-none print:absolute print:top-0 print:left-0">
-          <div className="flex justify-between mb-8 opacity-50">
-             <img src="/img/escudo.png" className="h-16 object-contain" onError={(e) => e.currentTarget.style.display='none'}/>
-             <img src="/img/innovacion.png" className="h-16 object-contain" onError={(e) => e.currentTarget.style.display='none'}/>
-          </div>
-          <h1 className="text-5xl font-black text-slate-900 mb-2 uppercase">CERTIFICADO</h1>
-          <p className="text-xl text-slate-500 italic mb-8">Inducción Corporativa</p>
-          <h2 className="text-4xl font-black text-slate-900 uppercase mb-2">{userData.nombres} {userData.apellidos}</h2>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-10">RUT: {userData.rut}</p>
-          <p className="text-lg text-slate-600 mb-8">Ha completado exitosamente la Inducción Municipal 2026.</p>
-          <div className="flex justify-between px-10 mt-12 opacity-70 text-xs font-bold uppercase">
-            <div>Gestión de Personas</div>
-            <div>{currentTime.toLocaleDateString()}</div>
-            <div>Alcaldía</div>
-          </div>
+        <div className="bg-white p-8 w-full max-w-4xl aspect-[1.4/1] relative shadow-2xl flex flex-col items-center justify-between text-center border-[10px] border-double border-slate-300">
+           <div className="w-full flex justify-between opacity-50">
+             <img src="/img/escudo.png" className="h-16 object-contain" onError={(e)=>e.currentTarget.style.display='none'}/>
+             <img src="/img/innovacion.png" className="h-16 object-contain" onError={(e)=>e.currentTarget.style.display='none'}/>
+           </div>
+           
+           <div>
+             <h1 className="text-5xl font-serif font-black text-slate-900 mb-2">CERTIFICADO</h1>
+             <p className="text-xl italic text-slate-500 mb-6">Inducción Corporativa 2026</p>
+             <h2 className="text-3xl font-bold uppercase text-slate-900 mb-2">{userData.nombres} {userData.apellidos}</h2>
+             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-8">{userData.rut} • {userData.cargo}</p>
+             <p className="text-lg text-slate-600">Ha completado exitosamente el programa de inducción.</p>
+           </div>
+
+           <div className="flex justify-between w-full px-8 mt-8 text-xs font-bold uppercase text-slate-400">
+             <div>Gestión de Personas</div>
+             <div>{currentTime.toLocaleDateString()}</div>
+             <div>Alcaldía</div>
+           </div>
         </div>
-        <div className="fixed bottom-8 right-8 flex gap-3 print:hidden z-50">
-           <button onClick={printCertificate} className="bg-white px-6 py-4 rounded-full font-bold shadow-xl"><Printer/></button>
-           <button onClick={() => setStep(11)} className="bg-red-600 text-white px-6 py-4 rounded-full font-bold shadow-xl"><ArrowRight/></button>
+        
+        <div className="fixed bottom-8 right-8 flex gap-4 print:hidden">
+           <button onClick={printCertificate} className="bg-white px-6 py-3 rounded-full font-bold shadow-lg"><Printer/></button>
+           <button onClick={goNext} className="bg-red-600 text-white px-6 py-3 rounded-full font-bold shadow-lg flex items-center gap-2">Finalizar <ArrowRight size={16}/></button>
         </div>
       </div>
     );
 
-    // 11. COMUNIDAD
+    // 11. FINAL
     case 11: return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center text-white font-sans">
-        <div className="max-w-md w-full bg-white/10 backdrop-blur-md p-10 rounded-[2rem] border border-white/10 shadow-2xl">
-           <Smartphone size={60} className="mx-auto mb-6 text-cyan-400" />
-           <h2 className="text-4xl font-black mb-4">¡Sigue Conectado!</h2>
-           <p className="text-slate-300 mb-8">Únete a nuestra comunidad digital.</p>
-           <div className="bg-white p-6 rounded-3xl text-slate-900 mb-8">
-              <QrCode size={100} className="mx-auto mb-4"/>
-              <p className="font-bold text-sm">Escanea para acceder al Portal RDMLS</p>
-           </div>
-           <button onClick={() => setStep(0)} className="text-slate-400 hover:text-white text-sm flex items-center justify-center gap-2 mx-auto">
-             <RefreshCw size={14}/> Cerrar Sesión
-           </button>
-        </div>
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white p-6 text-center">
+         <div className="bg-white/10 p-10 rounded-3xl backdrop-blur-md border border-white/10 max-w-md w-full">
+            <Smartphone size={50} className="mx-auto mb-4 text-cyan-400"/>
+            <h2 className="text-3xl font-black mb-4">¡Sigue Conectado!</h2>
+            <p className="text-slate-300 mb-8">Únete a nuestra comunidad digital.</p>
+            <div className="bg-white p-6 rounded-2xl text-slate-900 mb-8">
+               <QrCode size={100} className="mx-auto mb-2"/>
+               <p className="font-bold text-xs">Escanea para ir al Portal RDMLS</p>
+            </div>
+            <button onClick={() => setStep(0)} className="text-slate-400 hover:text-white flex items-center justify-center gap-2 text-sm w-full"><RefreshCw size={14}/> Cerrar Sesión</button>
+         </div>
       </div>
     );
 
     default: return null;
   }
 }
-
-```
