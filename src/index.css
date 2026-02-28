@@ -2,36 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos globales para asegurar pantalla completa */
+/* FORZAR PANTALLA COMPLETA Y FONDO OSCURO */
 html, body, #root {
   height: 100%;
+  width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Esto evita el doble scroll que pegaba la pantalla */
+  overflow: hidden; /* Adiós scrollbars dobles */
+  background-color: #0f172a; /* Fondo Slate-900 (Azul oscuro profundo) */
   font-family: 'Segoe UI', system-ui, sans-serif;
-  background-color: #0f172a;
+  color: white;
 }
 
-/* Barra de desplazamiento personalizada y elegante */
+/* Personalización del Scroll */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9; 
+  background: #1e293b; 
 }
 ::-webkit-scrollbar-thumb {
   background: #dc2626; 
   border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #b91c1c; 
-}
-
-/* Animaciones */
-@keyframes pulse-slow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-.animate-pulse-slow {
-  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
